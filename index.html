@@ -1032,15 +1032,26 @@ function dpTab(tab){
   dpTabActual=tab;
   const tabs=['personales','laborales','ss','os'];
   document.querySelectorAll('.subtab').forEach((el,i)=>el.classList.toggle('active',tabs[i]===tab));
-  renderDpTab();
+  mostrarTabDom(tab);
 }
 function renderDpTab(){
   if(agenteIdx===null)return;
-  const a=agentes[agenteIdx];const b=document.getElementById('dp-body');b.scrollTop=0;
-  if(dpTabActual==='personales')b.innerHTML=htmlPersonales(a);
-  else if(dpTabActual==='laborales')b.innerHTML=htmlLaborales(a);
-  else if(dpTabActual==='ss')b.innerHTML=htmlSS(a);
-  else if(dpTabActual==='os')b.innerHTML=htmlOS(a);
+  const a=agentes[agenteIdx];
+  const b=document.getElementById('dp-body');
+  // Renderizar TODAS las pestañas en el DOM (ocultas) para poder leer todos los campos al guardar
+  b.innerHTML=
+    `<div id="tab-personales" style="${dpTabActual==='personales'?'':'display:none'}">${htmlPersonales(a)}</div>`+
+    `<div id="tab-laborales"  style="${dpTabActual==='laborales' ?'':'display:none'}">${htmlLaborales(a)}</div>`+
+    `<div id="tab-ss"         style="${dpTabActual==='ss'        ?'':'display:none'}">${htmlSS(a)}</div>`+
+    `<div id="tab-os"         style="${dpTabActual==='os'        ?'':'display:none'}">${htmlOS(a)}</div>`;
+  b.scrollTop=0;
+}
+
+function mostrarTabDom(tab){
+  ['personales','laborales','ss','os'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el) el.style.display=(t===tab?'':'none');
+  });
 }
 
 function dpCampo(id,lbl,val,type='text',extra=''){
@@ -1246,19 +1257,26 @@ function guardarAgente(){
   const gv=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
   const gn=id=>parseFloat(gv(id))||0;
 
-  if(dpTabActual==='personales'){
+  // ── Personales (si los campos están en el DOM) ──
+  if(document.getElementById('p-cuil')){
     a.cuil=gv('p-cuil');a.nroagente=gv('p-nroagente');a.apeynom=gv('p-apeynom');
     a.domicilio=gv('p-domicilio');a.fecha_nac=gv('p-fecha_nac');a.sexo=gv('p-sexo');
     a.canthijo=gv('p-canthijo');a.conyuge=gv('p-conyuge');a.adherente=gv('p-adherente');
     a.asigfliar=gv('p-asigfliar');a.fechaing=gv('p-fechaing');a.fechabaja=gv('p-fechabaja');
-  } else if(dpTabActual==='laborales'){
+  }
+
+  // ── Laborales ──
+  if(document.getElementById('l-zonageo')){
     a.zonageo=gv('l-zonageo');a.actividad=gv('l-actividad');a.porcreduc=gv('l-porcreduc');
     a.saf=gv('l-saf');a.ubicacion=gv('l-ubicacion');a.codestado=gv('l-codestado');
     a.tipoliq=gv('l-tipoliq');a.funcionari=gv('l-funcionari');
     a.dias_traba=String(parseInt(gv('l-dias_traba'))||30);
     a.claseycar=gv('l-claseycar');a.rebpromo=gv('l-rebpromo');
     a.remu_doc=gv('l-remu_doc');a.act_doc=gv('l-act_doc');a.cant_hsext=gv('l-cant_hsext');
-  } else if(dpTabActual==='ss'){
+  }
+
+  // ── Seguridad Social ──
+  if(document.getElementById('s-remusueldo')){
     const remusueldo=gn('s-remusueldo'),remusac=gn('s-remusac'),hsextras=gn('s-hsextras');
     const premios=gn('s-premios'),vacaciones=gn('s-vacaciones'),canasta=gn('s-canasta_fl'),conceptono=gn('s-conceptono');
     const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
@@ -1278,7 +1296,10 @@ function guardarAgente(){
       d_svco:gv('s-d_svco'),d_ss:gv('s-d_ss'),d_svca:gv('s-d_svca'),d_sc:gv('s-d_sc'),
     });
     if(isDoc){a.ap_dcto788=gv('s-ap_dcto788');a.aporte_dif=gv('s-aporte_dif');}
-  } else if(dpTabActual==='os'){
+  }
+
+  // ── Obra Social ──
+  if(document.getElementById('o-codobra')){
     const codobra=gv('o-codobra');const remutotal=fn(a,'remutotal');
     const remuimpoos=fn(a,'remuimpoos')||remutotal;const cantAdh=parseInt(a.adherente)||0;
     const isDoc=a.act_doc!=='00'&&a.act_doc!=='';
@@ -1300,7 +1321,7 @@ function guardarAgente(){
   document.getElementById('dp-cuil').textContent=`CUIL: ${fv(a,'cuil')||'—'}  ·  Legajo: ${fv(a,'nroagente')||'—'}`;
   renderTabla();
   cerrarPanel();
-  guardarEnSheets(); // ← SINCRONIZAR con Sheets
+  guardarEnSheets();
   mostrarToast('✓ Cambios guardados');
 }
 
