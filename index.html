@@ -497,11 +497,11 @@ tr:last-child td{border-bottom:none}
 // ══════════════════════════════════════════════════════════════════════
 // GOOGLE SHEETS — PERSISTENCIA DE BORRADORES
 // ══════════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-nV5IBJyWbZ7MLTHGK-l0jh0p88t5V10KI0sJdbV4m24aHGy11tP0KRoWfQBZ-iG6yg/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzEMNUtnqR8D9CYG_R6jEI7ZCpXCOJUSoO7edce32d56wL0EVU32_n02wZe0allix7B1A/exec';
 
-let syncTimeout = null;      // para debounce del guardado
-let syncEstado  = 'ok';      // 'ok' | 'guardando' | 'error'
-let borradorAgentes = [];    // agentes cargados desde Sheets al login
+let syncTimeout = null;
+let syncEstado  = 'ok';
+let borradorAgentes = [];
 
 function setSyncIndicator(estado, texto){
   const el = document.getElementById('sync-indicator');
@@ -512,21 +512,51 @@ function setSyncIndicator(estado, texto){
   syncEstado = estado;
 }
 
-// Llama al Apps Script — GET para cargar/limpiar, POST para guardar (payload grande)
-function sheetCall(params) {
-  if (params.accion === 'cargar' || params.accion === 'limpiar') {
+// JSONP universal — funciona para GET sin límite con chunks
+function jsonp(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const timer = setTimeout(() => {
+      cleanup(); reject(new Error('Timeout'));
+    }, 20000);
+    function cleanup() {
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if(s) s.remove();
+    }
+    window[cbName] = function(data) {
+      clearTimeout(timer); cleanup(); resolve(data);
+    };
+    params.callback = cbName;
     const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-    return fetch(url, { method: 'GET', redirect: 'follow' }).then(r => r.json());
-  } else {
-    return fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      redirect: 'follow',
-      body: JSON.stringify(params),
-    }).then(r => r.json());
-  }
+    const script = document.createElement('script');
+    script.id = cbName;
+    script.src = url;
+    script.onerror = () => { clearTimeout(timer); cleanup(); reject(new Error('Error de red')); };
+    document.head.appendChild(script);
+  });
 }
 
-// Guarda el array `agentes` actual en Sheets (con debounce de 1.5s)
+// Guarda en lotes de 50 para no superar límite de URL
+async function sheetCall(params) {
+  if (params.accion !== 'guardar') {
+    return jsonp(params);
+  }
+  // Para guardar: primero limpiar, luego insertar en chunks
+  await jsonp({ accion: 'limpiar', organismo: params.organismo });
+  const todos = JSON.parse(params.agentes);
+  const CHUNK = 50;
+  for (let i = 0; i < todos.length; i += CHUNK) {
+    const lote = todos.slice(i, i + CHUNK);
+    await jsonp({
+      accion: 'agregar',
+      organismo: params.organismo,
+      agentes: JSON.stringify(lote)
+    });
+  }
+  return { ok: true };
+}
+
 function guardarEnSheets(){
   if(!currentOrg || currentOrg === 'ADMIN') return;
   clearTimeout(syncTimeout);
@@ -534,9 +564,9 @@ function guardarEnSheets(){
   syncTimeout = setTimeout(async ()=>{
     try{
       await sheetCall({
-        accion:    'guardar',
+        accion: 'guardar',
         organismo: currentOrg,
-        agentes:   JSON.stringify(agentes)
+        agentes: JSON.stringify(agentes)
       });
       setSyncIndicator('ok', '✓ Guardado');
     } catch(e){
@@ -546,52 +576,40 @@ function guardarEnSheets(){
   }, 1500);
 }
 
-// Limpia el borrador en Sheets (al confirmar envío final)
 async function limpiarEnSheets(){
   if(!currentOrg || currentOrg === 'ADMIN') return;
-  try{
-    await sheetCall({ accion: 'limpiar', organismo: currentOrg });
-  } catch(e){
-    console.error('Error limpiando borrador:', e);
-  }
+  try{ await jsonp({ accion: 'limpiar', organismo: currentOrg }); } catch(e){}
 }
 
-// Carga el borrador desde Sheets al hacer login
 async function verificarBorrador(){
   if(!currentOrg || currentOrg === 'ADMIN') return;
   try{
-    const data = await sheetCall({ accion: 'cargar', organismo: currentOrg });
+    const data = await jsonp({ accion: 'cargar', organismo: currentOrg });
     if(data.ok && data.agentes && data.agentes.length > 0){
       borradorAgentes = data.agentes;
-      // Mostrar banner
       document.getElementById('borrador-count').textContent = data.agentes.length;
       document.getElementById('borrador-banner').classList.remove('hidden');
     }
-  } catch(e){
-    console.error('Error verificando borrador:', e);
-    // No bloquear el login si Sheets falla
-  }
+  } catch(e){ console.error('Error verificando borrador:', e); }
 }
 
 function cargarBorrador(){
   agentes = [...borradorAgentes];
   document.getElementById('borrador-banner').classList.add('hidden');
-  setStep(2);
-  mostrarTablaAgentes();
+  setStep(2); mostrarTablaAgentes();
   mostrarToast(`✓ ${agentes.length} agentes restaurados`);
 }
 
 function descartarBorrador(){
   confirmarAccion(
     '¿Descartar borrador?',
-    `Se eliminarán los ${borradorAgentes.length} agentes guardados. Esta acción no se puede deshacer.`,
+    `Se eliminarán los ${borradorAgentes.length} agentes guardados.`,
     async function(){
       borradorAgentes = [];
       document.getElementById('borrador-banner').classList.add('hidden');
       await limpiarEnSheets();
       mostrarToast('🗑 Borrador descartado');
-    },
-    'Descartar'
+    }, 'Descartar'
   );
 }
 
