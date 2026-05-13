@@ -160,6 +160,15 @@ tr:last-child td{border-bottom:none}
 .save-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green-dark);color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none}
 .save-toast.show{opacity:1}
 
+/* Modal reutilizar agentes */
+.reutilizar-box{background:#fff;border-radius:var(--radius-lg);padding:24px;max-width:400px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.reutilizar-box .rt{font-size:14px;font-weight:700;margin-bottom:6px}
+.reutilizar-box .rs{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px}
+.reutilizar-period{display:flex;gap:12px;align-items:center;background:var(--bg2);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;font-size:12px}
+.reutilizar-period .rp-arrow{color:var(--green);font-weight:700;font-size:16px}
+.reutilizar-period .rp-val{font-family:var(--mono);font-weight:700;font-size:13px}
+.reutilizar-period .rp-lbl{font-size:10px;color:var(--text2)}
+
 /* ── BORRADOR BANNER ── */
 .borrador-banner{
   background:var(--amber-light);border:1px solid var(--amber-border);border-radius:var(--radius);
@@ -491,6 +500,34 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- Modal reutilizar agentes de borrador para nuevo período -->
+<div class="confirm-overlay hidden" id="modal-reutilizar">
+  <div class="reutilizar-box">
+    <div class="rt">📋 ¿Reutilizás los agentes del borrador?</div>
+    <div class="rs">El borrador guardado corresponde a un período distinto al que ingresaste. ¿Querés copiar los agentes del borrador y actualizarles el período automáticamente?</div>
+    <div class="reutilizar-period">
+      <div style="flex:1;text-align:center">
+        <div class="rp-lbl">Borrador guardado</div>
+        <div class="rp-val" id="rp-periodo-anterior">—</div>
+      </div>
+      <div class="rp-arrow">→</div>
+      <div style="flex:1;text-align:center">
+        <div class="rp-lbl">Período nuevo</div>
+        <div class="rp-val" id="rp-periodo-nuevo">—</div>
+      </div>
+    </div>
+    <div class="rs" style="color:var(--amber);background:var(--amber-light);border:1px solid var(--amber-border);border-radius:var(--radius);padding:8px 11px;margin-bottom:16px">
+      ⚠ Se copiará la estructura de agentes. Revisá los datos antes de enviar, ya que algunos valores (remuneraciones, días, etc.) pueden haber cambiado entre períodos.
+    </div>
+    <div class="confirm-btns">
+      <button class="btn-sm btn-danger" id="reutilizar-no">No, descartar borrador</button>
+      <div style="flex:1"></div>
+      <button class="btn-sm" id="reutilizar-ignorar">Continuar sin agentes</button>
+      <button class="btn-sm btn-primary" id="reutilizar-si">Sí, copiar agentes →</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /main -->
 
 <script>
@@ -530,12 +567,12 @@ async function sbGuardar(organismo, agentes){
 
 async function sbCargar(organismo){
   const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/borradores?organismo=eq.${encodeURIComponent(organismo)}&select=agentes`,
+    `${SUPABASE_URL}/rest/v1/borradores?organismo=eq.${encodeURIComponent(organismo)}&select=agentes,actualizado`,
     { method: 'GET', headers: SB_HEADERS }
   );
   if(!resp.ok) throw new Error('Error cargando: ' + resp.status);
   const data = await resp.json();
-  return data.length > 0 ? data[0].agentes : [];
+  return data.length > 0 ? data[0] : null;
 }
 
 async function sbLimpiar(organismo){
@@ -565,13 +602,24 @@ async function limpiarEnSheets(){
   try{ await sbLimpiar(currentOrg); } catch(e){ console.error('Error limpiando:', e); }
 }
 
+let borradorPeriodo = ''; // período detectado en el borrador guardado
+
 async function verificarBorrador(){
   if(!currentOrg || currentOrg === 'ADMIN') return;
   try{
-    const agentesGuardados = await sbCargar(currentOrg);
-    if(agentesGuardados && agentesGuardados.length > 0){
-      borradorAgentes = agentesGuardados;
-      document.getElementById('borrador-count').textContent = agentesGuardados.length;
+    const resultado = await sbCargar(currentOrg);
+    if(resultado && resultado.agentes && resultado.agentes.length > 0){
+      borradorAgentes = resultado.agentes;
+      // Detectar el período predominante en los agentes del borrador
+      const periodos = borradorAgentes.map(a => (a.periodo||'').trim()).filter(Boolean);
+      if(periodos.length > 0){
+        // Tomar el período más frecuente
+        const freq = periodos.reduce((acc, p) => { acc[p] = (acc[p]||0)+1; return acc; }, {});
+        borradorPeriodo = Object.keys(freq).sort((a,b)=>freq[b]-freq[a])[0] || '';
+      } else {
+        borradorPeriodo = '';
+      }
+      document.getElementById('borrador-count').textContent = borradorAgentes.length;
       document.getElementById('borrador-banner').classList.remove('hidden');
     }
   } catch(e){ console.error('Error verificando borrador:', e); }
@@ -586,15 +634,44 @@ function cargarBorrador(){
 
 function descartarBorrador(){
   confirmarAccion(
-    '\u00bfDescartar borrador?',
-    `Se eliminar\u00e1n los ${borradorAgentes.length} agentes guardados.`,
+    '¿Descartar borrador?',
+    `Se eliminarán los ${borradorAgentes.length} agentes guardados.`,
     async function(){
       borradorAgentes = [];
+      borradorPeriodo = '';
       document.getElementById('borrador-banner').classList.add('hidden');
       await limpiarEnSheets();
-      mostrarToast('\uD83D\uDDD1 Borrador descartado');
+      mostrarToast('🗑 Borrador descartado');
     }, 'Descartar'
   );
+}
+
+// ── MODAL REUTILIZAR AGENTES PARA NUEVO PERÍODO ────────────────────────
+function mostrarModalReutilizar(periodoNuevo, callbackSi, callbackNo, callbackIgnorar){
+  document.getElementById('rp-periodo-anterior').textContent = borradorPeriodo || '(desconocido)';
+  document.getElementById('rp-periodo-nuevo').textContent = periodoNuevo;
+  const modal = document.getElementById('modal-reutilizar');
+  modal.classList.remove('hidden');
+
+  // Clonar botones para limpiar listeners previos
+  ['reutilizar-si','reutilizar-no','reutilizar-ignorar'].forEach(id => {
+    const btn = document.getElementById(id);
+    const clone = btn.cloneNode(true);
+    btn.parentNode.replaceChild(clone, btn);
+  });
+
+  document.getElementById('reutilizar-si').addEventListener('click', function(){
+    modal.classList.add('hidden');
+    callbackSi();
+  });
+  document.getElementById('reutilizar-no').addEventListener('click', function(){
+    modal.classList.add('hidden');
+    callbackNo();
+  });
+  document.getElementById('reutilizar-ignorar').addEventListener('click', function(){
+    modal.classList.add('hidden');
+    callbackIgnorar();
+  });
 }
 // ══════════════════════════════════════════════════════════════════════
 // CONFIG EMAILJS
@@ -775,7 +852,7 @@ async function doLogin(){
 }
 
 function doLogout(){
-  currentOrg=null;agentes=[];csvErrores=[];totales={};csvFile=null;agenteIdx=null;borradorAgentes=[];
+  currentOrg=null;agentes=[];csvErrores=[];totales={};csvFile=null;agenteIdx=null;borradorAgentes=[];borradorPeriodo='';
   clearTimeout(syncTimeout);
   cerrarPanel();
   document.getElementById('screen-login').classList.remove('hidden');
@@ -825,6 +902,39 @@ function irPaso2(){
     return;
   }
   document.getElementById('paso1-err').classList.add('hidden');
+
+  // ── Detección de período distinto al del borrador ──────────────────
+  // Solo aplica si hay borrador guardado, con período detectado, y distinto al ingresado
+  if(borradorAgentes.length > 0 && borradorPeriodo && borradorPeriodo !== per && agentes.length === 0){
+    mostrarModalReutilizar(
+      per,
+      // Sí → copiar agentes actualizando el período
+      function(){
+        agentes = borradorAgentes.map(a => ({ ...a, periodo: per }));
+        borradorAgentes = agentes; // sincronizar para que "Continuar borrador" también use el nuevo período
+        borradorPeriodo = per;
+        document.getElementById('borrador-banner').classList.add('hidden');
+        guardarEnSheets();
+        mostrarToast(`✓ ${agentes.length} agentes copiados al período ${per}`);
+        setStep(2); mostrarTablaAgentes();
+      },
+      // No → descartar borrador y continuar sin agentes
+      async function(){
+        borradorAgentes = [];
+        borradorPeriodo = '';
+        document.getElementById('borrador-banner').classList.add('hidden');
+        await limpiarEnSheets();
+        mostrarToast('🗑 Borrador descartado');
+        setStep(2);
+      },
+      // Ignorar → continuar sin tocar nada (el banner de borrador sigue visible)
+      function(){
+        setStep(2);
+      }
+    );
+    return;
+  }
+
   setStep(2);
 }
 
