@@ -1034,6 +1034,9 @@ function importarCSV(text,nombre){
       }
     }
   }
+  // Período declarado en el formulario (Paso 1)
+  const periodoFormulario = (document.getElementById('d-periodo').value||'').trim();
+
   // Si ya hay agentes, agregar en lugar de reemplazar
   const nuevos=lines.map((l)=>{
     const vals=parsearLineaCSV(l);const row={};
@@ -1043,9 +1046,17 @@ function importarCSV(text,nombre){
       if(c==='fechaing'||c==='fechabaja'||c==='fecha_nac')v=normalizarFecha(v);
       row[c]=v;
     });
+    // Si el período del CSV difiere del declarado, se pisa automáticamente
+    if(periodoFormulario && row.periodo !== periodoFormulario) row.periodo = periodoFormulario;
     if((!row.codigo||parseInt(row.codigo)===0)&&orgData) row.codigo=String(orgData.c);
     return row;
   });
+
+  // Detectar período original del CSV para mostrar aviso informativo
+  const _periodoCSV=(()=>{const idx=COLS.indexOf('periodo');if(idx<0)return'';for(const l of lines){const v=normalizarPeriodo((parsearLineaCSV(l)[idx]||'').trim());if(v&&v!==periodoFormulario)return v;}return'';})();
+  const avisoperiodo = _periodoCSV && periodoFormulario
+    ? `<div class="alert a-info" style="margin-top:6px;font-size:11px"><span class="ai">\u2139</span>El CSV ten\u00eda per\u00edodo <strong>${_periodoCSV}</strong> \u2014 se actualiz\u00f3 autom\u00e1ticamente a <strong>${periodoFormulario}</strong>.</div>`
+    : '';
 
   const totalAntes = agentes.length;
   agentes = [...agentes, ...nuevos]; // ACUMULAR en lugar de reemplazar
@@ -1058,7 +1069,7 @@ function importarCSV(text,nombre){
         <div class="fs">${nuevos.length} nuevos · ${agentes.length} total acumulado${totalAntes>0?' ('+totalAntes+' previos)':''}</div></div>
       </div>
       <button id="btn-quitar-csv" class="btn-sm btn-danger" style="flex-shrink:0;padding:3px 8px">✕ Quitar</button>
-    </div>`;
+    </div>${avisoperiodo}`;
   document.getElementById('csv-info').classList.remove('hidden');
   document.getElementById('dz-csv').style.display='none';
   document.getElementById('btn-quitar-csv').addEventListener('click',function(){
