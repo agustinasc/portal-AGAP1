@@ -497,7 +497,7 @@ tr:last-child td{border-bottom:none}
 // ══════════════════════════════════════════════════════════════════════
 // GOOGLE SHEETS — PERSISTENCIA DE BORRADORES
 // ══════════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx0HpGTHoWLK59pd5-EOs6C2ahKi-1liTrE8BWaPXphUxo74Mb22ZvNzK6Dcjec4Hyh2g/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-nV5IBJyWbZ7MLTHGK-l0jh0p88t5V10KI0sJdbV4m24aHGy11tP0KRoWfQBZ-iG6yg/exec';
 
 let syncTimeout = null;      // para debounce del guardado
 let syncEstado  = 'ok';      // 'ok' | 'guardando' | 'error'
@@ -512,14 +512,12 @@ function setSyncIndicator(estado, texto){
   syncEstado = estado;
 }
 
-// Llama al Apps Script con parámetros GET
+// Llama al Apps Script — GET para cargar/limpiar, POST para guardar (payload grande)
 function sheetCall(params) {
   if (params.accion === 'cargar' || params.accion === 'limpiar') {
-    // Cargar y limpiar van por GET (payload pequeño)
     const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
     return fetch(url, { method: 'GET', redirect: 'follow' }).then(r => r.json());
   } else {
-    // Guardar va por POST (payload grande)
     return fetch(APPS_SCRIPT_URL, {
       method: 'POST',
       redirect: 'follow',
