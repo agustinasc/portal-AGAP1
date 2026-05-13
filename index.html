@@ -513,11 +513,35 @@ function setSyncIndicator(estado, texto){
 }
 
 // Llama al Apps Script con parámetros GET
-async function sheetCall(params){
-  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  const resp = await fetch(url);
-  if(!resp.ok) throw new Error('HTTP ' + resp.status);
-  return await resp.json();
+function sheetCall(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now();
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      reject(new Error('Timeout'));
+    }, 10000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const script = document.getElementById(cbName);
+      if (script) script.remove();
+      resolve(data);
+    };
+
+    params.callback = cbName;
+    const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+    const script = document.createElement('script');
+    script.id = cbName;
+    script.src = url;
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      reject(new Error('Script error'));
+    };
+    document.body.appendChild(script);
+  });
 }
 
 // Guarda el array `agentes` actual en Sheets (con debounce de 1.5s)
