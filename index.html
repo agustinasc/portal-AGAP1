@@ -514,8 +514,18 @@ function setSyncIndicator(estado, texto){
 
 // Llama al Apps Script con parámetros GET
 function sheetCall(params) {
-  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  return fetch(url, { method: 'GET', redirect: 'follow' }).then(r => r.json());
+  if (params.accion === 'cargar' || params.accion === 'limpiar') {
+    // Cargar y limpiar van por GET (payload pequeño)
+    const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+    return fetch(url, { method: 'GET', redirect: 'follow' }).then(r => r.json());
+  } else {
+    // Guardar va por POST (payload grande)
+    return fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      body: JSON.stringify(params),
+    }).then(r => r.json());
+  }
 }
 
 // Guarda el array `agentes` actual en Sheets (con debounce de 1.5s)
