@@ -516,11 +516,37 @@ function setSyncIndicator(estado, texto){
 // Llama al Apps Script con parámetros GET
 function sheetCall(params) {
   return new Promise((resolve, reject) => {
-    const cbName = 'cb_' + Date.now();
+    const cbName = 'cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const timeout = setTimeout(() => {
       delete window[cbName];
+      const s = document.getElementById(cbName);
+      if(s) s.remove();
       reject(new Error('Timeout'));
-    }, 10000);
+    }, 15000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if(s) s.remove();
+      resolve(data);
+    };
+
+    params.callback = cbName;
+    const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+    const script = document.createElement('script');
+    script.id = cbName;
+    script.src = url;
+    script.crossOrigin = 'anonymous';
+    script.onerror = (e) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      reject(new Error('Script error: ' + url));
+    };
+    document.head.appendChild(script); // ← head en lugar de body
+  });
+}
 
     window[cbName] = function(data) {
       clearTimeout(timeout);
