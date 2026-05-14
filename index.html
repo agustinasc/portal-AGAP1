@@ -744,10 +744,12 @@ const ERRORES_DEF={
   73:['ADVERTENCIA','d_ss vacío o cero'],74:['ADVERTENCIA','trasp_osep vacío o cero']
 };
 
+/*************** BASES Y MONTOS MINIMOS  ***************/
+
 const TOL=0.02;
-const ANSES_APORTE_MIN=14090.06,ANSES_APORTE_MAX=457920.38,ANSES_BASE_MAX=4162912.57;
+const ANSES_APORTE_MIN=14090.06,ANSES_APORTE_MAX=473398.09,ANSES_BASE_MAX=4303619.01;
 const OSEP_APORTE_MIN=33846.96,OSEP_CONTRIB_MIN=67693.91,OSEP_TRASP_MIN=3760.77,OSEP_BASE_MIN=752154.63;
-const CAJA_APORTE_MIN=10734,CAJA_APORTE_PCT=0.03,CAJA_CONTRIB_PCT=0.03,CAJA_DEUDA_PCT=0.06;
+const CAJA_APORTE_MIN=10890,CAJA_APORTE_PCT=0.03,CAJA_CONTRIB_PCT=0.03,CAJA_DEUDA_PCT=0.06;
 const D_SVCO_VAL=5000,D_SS_VAL=4400;
 const ACT_PERM=["1106","2106","1206","2206","1306","2306","1406","2406","9999","1506","2506","0106","0206","0306","0406","01"];
 const ACT_DOC=["75","76","77","78","79","00","01"];
@@ -1254,7 +1256,7 @@ function recalcSS(){
   const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
   const a=agenteIdx!==null?agentes[agenteIdx]:null;const isDoc=a?fv(a,'act_doc')==='01':false;
   const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
-  const aportepatr=r2(remuimpo*0.1017);const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
+  const aportepatr=r2(remuimpo*0.10753);const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
   const aporte_caj=adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
   const contrib_ca=adCaja==='T'?r2(remutotal*CAJA_CONTRIB_PCT):0;
   const deudaCalc=tieneDeud==='T'?r2(remutotal*CAJA_DEUDA_PCT):0;
@@ -1270,7 +1272,7 @@ function htmlSS(a){
   const premios=fn(a,'premios'),vacaciones=fn(a,'vacaciones'),canasta=fn(a,'canasta_fl'),conceptono=fn(a,'conceptono');
   const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
   const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
-  const aportepatr=r2(remuimpo*0.1017);const adCaja=fv(a,'ad_caja_co');const tieneDeud=fv(a,'tiene_deud');
+  const aportepatr=r2(remuimpo*0.10753);const adCaja=fv(a,'ad_caja_co');const tieneDeud=fv(a,'tiene_deud');
   const aporte_caj=adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
   const contrib_ca=adCaja==='T'?r2(remutotal*CAJA_CONTRIB_PCT):0;const deudaCalc=tieneDeud==='T'?r2(remutotal*CAJA_DEUDA_PCT):0;
   const oninput='oninput="recalcSS()"';const onchange='onchange="recalcSS()"';
@@ -1403,7 +1405,7 @@ function guardarAgente(){
     const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
     const isDoc=a.act_doc==='01';
     const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
-    const aportepatr=r2(remuimpo*0.1017);const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
+    const aportepatr=r2(remuimpo*0.10753);const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
     const aporte_caj=adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
     const contrib_ca=adCaja==='T'?r2(remutotal*CAJA_CONTRIB_PCT):0;
     Object.assign(a,{
@@ -1504,7 +1506,7 @@ function procesarValidaciones(){
     const aportejubi=fn(a,'aportejubi');
     if(esMag){if(!igual(aportejubi,r2(remuimpo*0.18)))ag(53);}
     else{if(!igual(aportejubi,Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX)))ag(53);if(dias===30&&aportejubi<ANSES_APORTE_MIN-TOL)ag(18);}
-    if(!igual(fn(a,'aportepatr'),r2(remuimpo*0.1017)))ag(52);
+    if(!igual(fn(a,'aportepatr'),r2(remuimpo*0.10753)))ag(52);
     if(fn(a,'apafilos')<OSEP_APORTE_MIN-TOL)ag(65);if(fn(a,'appatros')<OSEP_CONTRIB_MIN-TOL)ag(66);
     if(fv(a,'codobra')==='009960'){const t=fn(a,'trasp_osep');if(t===0)ag(74);else if(t<OSEP_TRASP_MIN-TOL)ag(67);}
     if(!fv(a,'d_svco')||fn(a,'d_svco')===0)ag(72);else if(!igual(fn(a,'d_svco'),D_SVCO_VAL))ag(54);
