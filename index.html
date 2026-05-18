@@ -2,6 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- © 2026 Agustina SC — Todos los derechos reservados.
+     Software registrado ante la Dirección Nacional del Derecho de Autor (DNDA).
+     Prohibida su reproducción, distribución o modificación sin autorización
+     expresa de la autora. -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal ASCript — SILI 8.0 — AGAP</title>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -431,6 +435,7 @@ tr:last-child td{border-bottom:none}
     <button class="tab active" onclick="adminTab('resumen')">Resumen</button>
     <button class="tab" onclick="adminTab('envios')">Todos los envíos</button>
     <button class="tab" onclick="adminTab('organismos')">Organismos</button>
+    <button class="tab" onclick="adminTab('parametros')">⚙ Parámetros</button>
   </div>
   <div id="at-resumen">
     <div class="metric-grid">
@@ -468,6 +473,56 @@ tr:last-child td{border-bottom:none}
       <div id="a-orgs"></div>
     </div>
   </div>
+
+  <div id="at-parametros" class="hidden">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div class="ct" style="margin:0">Parámetros de cálculo</div>
+          <div style="font-size:11px;color:var(--text2)">Actualizá topes, bases y alícuotas sin modificar el código. Los cambios se aplican inmediatamente en la sesión actual.</div>
+        </div>
+        <button class="btn-sm btn-primary" onclick="guardarParametros()">✓ Guardar cambios</button>
+      </div>
+      <div id="param-ok" class="alert a-ok hidden" style="margin-bottom:10px"><span class="ai">✓</span>Parámetros actualizados correctamente.</div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">ANSES — Seguridad Social</div>
+      <div class="g4" style="margin-bottom:12px">
+        <div><label>Tope mín. aporte trabajador</label><input type="number" id="pm-anses-aporte-min" step="0.01"></div>
+        <div><label>Tope máx. aporte trabajador</label><input type="number" id="pm-anses-aporte-max" step="0.01"></div>
+        <div><label>Tope mín. contrib. patronal</label><input type="number" id="pm-anses-contrib-min" step="0.01"></div>
+        <div><label>Base máxima imponible</label><input type="number" id="pm-anses-base-max" step="0.01"></div>
+      </div>
+      <div class="g4" style="margin-bottom:16px">
+        <div><label>Alícuota aporte trabajador (%)</label><input type="number" id="pm-pct-aporte" step="0.001" placeholder="11"></div>
+        <div><label>Alícuota contrib. patronal (%)</label><input type="number" id="pm-pct-contrib" step="0.001" placeholder="10.753"></div>
+        <div></div><div></div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">OSEP — Obra Social Provincial</div>
+      <div class="g4" style="margin-bottom:16px">
+        <div><label>Mín. aporte afiliado (4.5%)</label><input type="number" id="pm-osep-aporte-min" step="0.01"></div>
+        <div><label>Mín. contrib. patronal (9%)</label><input type="number" id="pm-osep-contrib-min" step="0.01"></div>
+        <div><label>Mín. fondo trasplante (0.5%)</label><input type="number" id="pm-osep-trasp-min" step="0.01"></div>
+        <div><label>Base mín. afil. voluntarios</label><input type="number" id="pm-osep-base-min" step="0.01"></div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">Caja Complementaria 82 Móvil</div>
+      <div class="g4" style="margin-bottom:16px">
+        <div><label>Tope mín. aporte/contrib.</label><input type="number" id="pm-caja-min" step="0.01"></div>
+        <div><label>Sueldo del Gobernador</label><input type="number" id="pm-caja-gob" step="0.01"></div>
+        <div style="padding-top:22px;font-size:11px;color:var(--text2)" id="pm-caja-max-lbl">Tope máx: —</div>
+        <div></div>
+      </div>
+
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">Seguros (valores fijos)</div>
+      <div class="g4">
+        <div><label>Seg. Obligatorio</label><input type="number" id="pm-svco" step="0.01"></div>
+        <div><label>Seg. Sepelio</label><input type="number" id="pm-ss" step="0.01"></div>
+        <div></div><div></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- Modal gestión de organismo -->
@@ -528,6 +583,9 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+  <div style="text-align:center;font-size:10px;color:var(--text3);padding:12px 0 18px;margin-top:8px">
+    © 2026 ASCript — Todos los derechos reservados
+  </div>
 </div><!-- /main -->
 
 <script>
@@ -734,6 +792,9 @@ const ERRORES_DEF={
   49:['ADVERTENCIA','tipoliq debe ser 1'],50:['ADVERTENCIA','apafilos != remutotal*4.5%'],
   51:['ADVERTENCIA','appatros != remutotal*9%'],52:['ADVERTENCIA','aportepatr != remuimpo*10.753%'],
   75:['ADVERTENCIA','aportepatr < mínimo ANSES (contribución patronal)'],
+  76:['ADVERTENCIA','aporte_caj < mínimo Caja Complementaria'],
+  77:['ADVERTENCIA','aporte_caj > máximo Caja (3% sueldo gobernador)'],
+  78:['ADVERTENCIA','contrib_ca > máximo Caja (3% sueldo gobernador)'],
   53:['ADVERTENCIA','aportejubi no coincide'],54:['ADVERTENCIA','d_svco debe ser 5000.00'],
   55:['ADVERTENCIA','d_ss debe ser 4400.00'],60:['ADVERTENCIA','fechaing vacía'],
   61:['ADVERTENCIA','fechaing formato inválido'],62:['ADVERTENCIA','fecha_nac formato inválido'],
@@ -748,11 +809,45 @@ const ERRORES_DEF={
 /*************** BASES Y MONTOS MINIMOS  ***************/
 
 const TOL=0.02;
-const ANSES_APORTE_MIN=14566.30,ANSES_APORTE_MAX=473398.09,ANSES_BASE_MAX=4303619.01,ANSES_CONTRIB_MIN=14239.22;
-const PCT_CONTRIB_PATRONAL=0.10753;
-const OSEP_APORTE_MIN=33846.96,OSEP_CONTRIB_MIN=67693.91,OSEP_TRASP_MIN=3760.77,OSEP_BASE_MIN=752154.63;
-const CAJA_APORTE_MIN=10890,CAJA_APORTE_PCT=0.03,CAJA_CONTRIB_PCT=0.03,CAJA_DEUDA_PCT=0.06;
-const D_SVCO_VAL=5000,D_SS_VAL=4400;
+// ── PARÁMETROS EDITABLES DESDE ADMIN ──────────────────────────────────
+const TOPES = {
+  ANSES_APORTE_MIN:     14566.30,
+  ANSES_APORTE_MAX:     473398.09,
+  ANSES_BASE_MAX:       4303619.01,
+  ANSES_CONTRIB_MIN:    14239.22,
+  PCT_CONTRIB_PATRONAL: 0.10753,
+  PCT_APORTE_TRAB:      0.11,
+  OSEP_APORTE_MIN:      34828.32,
+  OSEP_CONTRIB_MIN:     69656.64,
+  OSEP_TRASP_MIN:       3869.81,
+  OSEP_BASE_MIN:        773962.74,
+  CAJA_APORTE_MIN:      10890,
+  CAJA_SUELDO_GOB:      7835220, // sueldo del gobernador — tope máx = 3%
+  D_SVCO_VAL:           5000,
+  D_SS_VAL:             4400,
+};
+// Alícuotas de caja — no cambian mensualmente
+const CAJA_APORTE_PCT=0.03,CAJA_CONTRIB_PCT=0.03,CAJA_DEUDA_PCT=0.06;
+// Alias para compatibilidad con el código existente
+let ANSES_APORTE_MIN,ANSES_APORTE_MAX,ANSES_BASE_MAX,ANSES_CONTRIB_MIN,
+    PCT_CONTRIB_PATRONAL,OSEP_APORTE_MIN,OSEP_CONTRIB_MIN,OSEP_TRASP_MIN,
+    OSEP_BASE_MIN,CAJA_APORTE_MIN,CAJA_SUELDO_GOB,D_SVCO_VAL,D_SS_VAL;
+function sincronizarTopes(){
+  ANSES_APORTE_MIN     = TOPES.ANSES_APORTE_MIN;
+  ANSES_APORTE_MAX     = TOPES.ANSES_APORTE_MAX;
+  ANSES_BASE_MAX       = TOPES.ANSES_BASE_MAX;
+  ANSES_CONTRIB_MIN    = TOPES.ANSES_CONTRIB_MIN;
+  PCT_CONTRIB_PATRONAL = TOPES.PCT_CONTRIB_PATRONAL;
+  OSEP_APORTE_MIN      = TOPES.OSEP_APORTE_MIN;
+  OSEP_CONTRIB_MIN     = TOPES.OSEP_CONTRIB_MIN;
+  OSEP_TRASP_MIN       = TOPES.OSEP_TRASP_MIN;
+  OSEP_BASE_MIN        = TOPES.OSEP_BASE_MIN;
+  CAJA_APORTE_MIN      = TOPES.CAJA_APORTE_MIN;
+  CAJA_SUELDO_GOB      = TOPES.CAJA_SUELDO_GOB;
+  D_SVCO_VAL           = TOPES.D_SVCO_VAL;
+  D_SS_VAL             = TOPES.D_SS_VAL;
+}
+sincronizarTopes();
 const ACT_PERM=["1106","2106","1206","2206","1306","2306","1406","2406","9999","1506","2506","0106","0206","0306","0406","01"];
 const ACT_DOC=["75","76","77","78","79","00","01"];
 const CODOBRA_OK=["009960","001102"];
@@ -1507,7 +1602,7 @@ function procesarValidaciones(){
     if(!igual(remuimpoos,remutotal))ag(30);
     const aportejubi=fn(a,'aportejubi');
     if(esMag){if(!igual(aportejubi,r2(remuimpo*0.18)))ag(53);}
-    else{if(!igual(aportejubi,Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX)))ag(53);if(dias===30&&aportejubi<ANSES_APORTE_MIN-TOL)ag(18);}
+    else{if(!igual(aportejubi,Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX)))ag(53);if(dias===30&&aportejubi<ANSES_APORTE_MIN-TOL)ag(18);if(aportejubi>ANSES_APORTE_MAX+TOL)ag(71);}
     if(!igual(fn(a,'aportepatr'),r2(remuimpo*PCT_CONTRIB_PATRONAL)))ag(52);
     if(dias===30&&fn(a,'aportepatr')<ANSES_CONTRIB_MIN-TOL)ag(75);
     if(fn(a,'apafilos')<OSEP_APORTE_MIN-TOL)ag(65);if(fn(a,'appatros')<OSEP_CONTRIB_MIN-TOL)ag(66);
@@ -1517,6 +1612,9 @@ function procesarValidaciones(){
     if(fv(a,'ad_caja_co')==='T'){
       if(!igual(fn(a,'aporte_caj'),r2(remutotal*CAJA_APORTE_PCT)))ag(24);
       if(!igual(fn(a,'contrib_ca'),r2(remutotal*CAJA_CONTRIB_PCT)))ag(25);
+      if(fn(a,'aporte_caj')<CAJA_APORTE_MIN-TOL)ag(76);
+      if(CAJA_SUELDO_GOB>0&&fn(a,'aporte_caj')>r2(CAJA_SUELDO_GOB*CAJA_APORTE_PCT)+TOL)ag(77);
+      if(CAJA_SUELDO_GOB>0&&fn(a,'contrib_ca')>r2(CAJA_SUELDO_GOB*CAJA_CONTRIB_PCT)+TOL)ag(78);
     }
     if(orgData){const codCSV=parseInt(fv(a,'codigo'))||0;if(codCSV!==0&&codCSV!==orgData.c)ag(48);}
   });
@@ -1944,11 +2042,57 @@ function exportarRegistroCSV(){
 }
 
 function adminTab(tab){
-  ['resumen','envios','organismos'].forEach((t,i)=>{
+  ['resumen','envios','organismos','parametros'].forEach((t,i)=>{
     document.getElementById('at-'+t).classList.toggle('hidden',t!==tab);
     document.querySelectorAll('.tab')[i].classList.toggle('active',t===tab);
   });
-  if(tab==='envios')renderAdminAll();if(tab==='organismos')renderAdminOrgs();if(tab==='resumen')refreshAdmin();
+  if(tab==='envios')renderAdminAll();
+  if(tab==='organismos')renderAdminOrgs();
+  if(tab==='resumen')refreshAdmin();
+  if(tab==='parametros')cargarCamposParametros();
+}
+
+function cargarCamposParametros(){
+  document.getElementById('pm-anses-base-max').value    = TOPES.ANSES_BASE_MAX;
+  document.getElementById('pm-anses-aporte-min').value  = TOPES.ANSES_APORTE_MIN;
+  document.getElementById('pm-anses-aporte-max').value  = TOPES.ANSES_APORTE_MAX;
+  document.getElementById('pm-anses-contrib-min').value = TOPES.ANSES_CONTRIB_MIN;
+  document.getElementById('pm-pct-contrib').value       = +(TOPES.PCT_CONTRIB_PATRONAL*100).toFixed(4);
+  document.getElementById('pm-pct-aporte').value        = +(TOPES.PCT_APORTE_TRAB*100).toFixed(4);
+  document.getElementById('pm-osep-aporte-min').value   = TOPES.OSEP_APORTE_MIN;
+  document.getElementById('pm-osep-contrib-min').value  = TOPES.OSEP_CONTRIB_MIN;
+  document.getElementById('pm-osep-trasp-min').value    = TOPES.OSEP_TRASP_MIN;
+  document.getElementById('pm-osep-base-min').value     = TOPES.OSEP_BASE_MIN;
+  document.getElementById('pm-caja-min').value          = TOPES.CAJA_APORTE_MIN;
+  document.getElementById('pm-caja-gob').value          = TOPES.CAJA_SUELDO_GOB;
+  const cajaTope = TOPES.CAJA_SUELDO_GOB > 0 ? fmt(TOPES.CAJA_SUELDO_GOB * 0.03) : '—';
+  const lblCaja = document.getElementById('pm-caja-max-lbl');
+  if(lblCaja) lblCaja.textContent = 'Tope máx: $' + cajaTope;
+  document.getElementById('pm-svco').value              = TOPES.D_SVCO_VAL;
+  document.getElementById('pm-ss').value                = TOPES.D_SS_VAL;
+}
+
+function guardarParametros(){
+  const gn = id => parseFloat(document.getElementById(id).value)||0;
+  TOPES.ANSES_APORTE_MIN      = gn('pm-anses-aporte-min');
+  TOPES.ANSES_BASE_MAX        = gn('pm-anses-base-max');
+  TOPES.ANSES_APORTE_MAX      = gn('pm-anses-aporte-max');
+  TOPES.ANSES_CONTRIB_MIN     = gn('pm-anses-contrib-min');
+  TOPES.PCT_CONTRIB_PATRONAL  = gn('pm-pct-contrib')/100;
+  TOPES.PCT_APORTE_TRAB       = gn('pm-pct-aporte')/100;
+  TOPES.OSEP_APORTE_MIN       = gn('pm-osep-aporte-min');
+  TOPES.OSEP_CONTRIB_MIN      = gn('pm-osep-contrib-min');
+  TOPES.OSEP_TRASP_MIN        = gn('pm-osep-trasp-min');
+  TOPES.OSEP_BASE_MIN         = gn('pm-osep-base-min');
+  TOPES.CAJA_APORTE_MIN       = gn('pm-caja-min');
+  TOPES.CAJA_SUELDO_GOB       = gn('pm-caja-gob');
+  TOPES.D_SVCO_VAL            = gn('pm-svco');
+  TOPES.D_SS_VAL              = gn('pm-ss');
+  sincronizarTopes(); // actualizar alias globales
+  const ok = document.getElementById('param-ok');
+  ok.classList.remove('hidden');
+  setTimeout(()=>ok.classList.add('hidden'), 3000);
+  mostrarToast('✓ Parámetros actualizados');
 }
 
 init();
