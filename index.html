@@ -1453,10 +1453,10 @@ function htmlOS(a){
   </div>
   <div class="field-group" ${esOSEP?'':' style="display:none"'} id="os-vol-sec">
     <div class="field-group-title">Afiliados voluntarios OSEP</div>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:8px">Adherentes: <strong>${cantAdh}</strong> · Porcentaje: <strong>${pct*100}%</strong></p>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:8px">Adherentes: <strong>${cantAdh}</strong> · Porcentaje: <strong>${pct*100}%</strong> <span class="calc-badge">editables si difieren</span></p>
     <div class="g3">
-      ${dpRO(`Aporte voluntario (${pct*100}%)`,apo_vol)}
-      ${dpRO('Fondo trasplante voluntario (0.5%)',tras_vol)}
+      ${dpCampo('o-apo_vol',`Aporte voluntario (${pct*100}%)`,fv(a,'apo_vol')||String(apo_vol),'number')}
+      ${dpCampo('o-tras_vol','Fondo trasplante voluntario (0.5%)',fv(a,'tras_vol')||String(tras_vol),'number')}
       ${dpRO('Fondo trasplante OSEP (0.5%)',trasp_osep)}
     </div>
   </div>
@@ -1532,7 +1532,10 @@ function guardarAgente(){
       const pct=cantAdh>=2?0.05:cantAdh>=1?0.025:0;
       const apo_vol=cantAdh>0?Math.max(r2(remuimpoos*pct),r2(OSEP_BASE_MIN*pct)):0;
       const trasp_osep=Math.max(r2(remuimpoos*0.005),OSEP_TRASP_MIN);const tras_vol=cantAdh>0?trasp_osep:0;
-      a.apo_vol=String(apo_vol);a.tras_vol=String(tras_vol);a.trasp_osep=String(trasp_osep);
+      // Usar valor editado si existe, sino el calculado
+      a.apo_vol=String(gv('o-apo_vol')||apo_vol);
+      a.tras_vol=String(gv('o-tras_vol')||tras_vol);
+      a.trasp_osep=String(trasp_osep);
       a.cos_pro=gv('o-cos_pro');a.cos_alt=gv('o-cos_alt');a.cos_int=gv('o-cos_int');
     } else {a.apo_vol='0';a.tras_vol='0';a.trasp_osep='0';a.cos_pro='0';a.cos_alt='0';a.cos_int='0';}
   }
