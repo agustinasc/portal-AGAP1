@@ -1447,7 +1447,7 @@ function htmlOS(a){
     ${dpSelect('o-codobra','Obra Social *',fv(a,'codobra'),[['009960','009960 — OSEP (Provincial)'],['001102','001102 — OSPLAD (Nacional)']])}
     ${esOSPLAD&&isDoc?`<div class="alert a-info" style="margin-top:8px"><span class="ai">ℹ</span>Docente OSPLAD: aporte 3%, contribución 6%</div>`:''}
     <div class="g2" style="margin-top:10px">
-      ${dpRO(`Aporte O.S. (${(pctAporte*100).toFixed(0)}%)`,apafilos)}
+      ${dpRO(`Aporte O.S. (${(pctAporte*100).toFixed(2)}%)`,apafilos)}
       ${dpRO(`Contribución Patr. O.S. (${(pctContrib*100).toFixed(0)}%)`,appatros)}
     </div>
   </div>
