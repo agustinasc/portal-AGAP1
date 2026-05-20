@@ -1174,12 +1174,78 @@ function importarCSV(text,nombre){
   document.getElementById('btn-quitar-csv').addEventListener('click',function(){
     confirmarAccion('¿Quitar el archivo?','Se eliminarán todos los agentes cargados.',limpiarAgentes,'Quitar archivo');
   });
+  recalcularSilencioso(); // recalcular con parámetros actuales
   mostrarTablaAgentes();
   guardarEnSheets(); // guardar automáticamente al importar
 }
 
 function mostrarTablaAgentes(){
   document.getElementById('agentes-card').classList.remove('hidden');renderTabla();
+}
+
+// ── RECALCULAR TODOS LOS AGENTES ──────────────────────────────────────
+function recalcularSilencioso(){
+  if(!agentes.length) return;
+  _doRecalcular();
+}
+
+function recalcularTodos(){
+  if(!agentes.length) return;
+  confirmarAccion(
+    'Recalcular aportes',
+    `Se recalcularán los aportes y contribuciones de ${agentes.length} agente(s) usando los parámetros actuales. Las remuneraciones no se modifican.`,
+    function(){
+      _doRecalcular();
+      renderTabla();
+      guardarEnSheets();
+      mostrarToast(`✓ ${agentes.length} agente(s) recalculados`);
+    },
+    'Recalcular'
+  );
+}
+
+function _doRecalcular(){
+  agentes.forEach(a => {
+    const remusueldo = fn(a,'remusueldo'), remusac = fn(a,'remusac'), hsextras = fn(a,'hsextras');
+    const premios = fn(a,'premios'), vacaciones = fn(a,'vacaciones');
+    const canasta = fn(a,'canasta_fl'), conceptono = fn(a,'conceptono');
+    const remuimpo   = r2(remusueldo + remusac + hsextras);
+    const remutotal  = r2(remuimpo + conceptono + premios + vacaciones + canasta);
+    const remuimpoos = remutotal;
+    const isDoc = fv(a,'act_doc') === '01';
+    const cantAdh = parseInt(fv(a,'adherente')) || 0;
+    const adCaja  = fv(a,'ad_caja_co');
+    const tieneDeud = fv(a,'tiene_deud');
+    const codobra = fv(a,'codobra');
+    const aportejubi = isDoc
+      ? r2(remuimpo * 0.18)
+      : Math.min(r2(remuimpo * TOPES.PCT_APORTE_TRAB), ANSES_APORTE_MAX);
+    const aportepatr = r2(remuimpo * TOPES.PCT_CONTRIB_PATRONAL);
+    const esOSEP   = codobra === '009960';
+    const esOSPLAD = codobra === '001102';
+    let pctAporte = 0.045, pctContrib = 0.09;
+    let minAporte = OSEP_APORTE_MIN, minContrib = OSEP_CONTRIB_MIN;
+    if(esOSPLAD){ if(isDoc){ pctAporte=0.03; pctContrib=0.06; } minAporte=0; minContrib=0; }
+    const apafilos = minAporte > 0 ? Math.max(r2(remutotal*pctAporte),minAporte) : r2(remutotal*pctAporte);
+    const appatros = minContrib > 0 ? Math.max(r2(remutotal*pctContrib),minContrib) : r2(remutotal*pctContrib);
+    let trasp_osep=0, apo_vol=0, tras_vol=0;
+    if(esOSEP){
+      trasp_osep = Math.max(r2(remuimpoos*0.005), OSEP_TRASP_MIN);
+      const pct  = cantAdh>=2?0.05:cantAdh>=1?0.025:0;
+      apo_vol    = cantAdh>0?Math.max(r2(remuimpoos*pct),r2(OSEP_BASE_MIN*pct)):0;
+      tras_vol   = cantAdh>0?trasp_osep:0;
+    }
+    const aporte_caj = adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
+    const contrib_ca = adCaja==='T'?r2(remutotal*CAJA_CONTRIB_PCT):0;
+    const deuda_caja = tieneDeud==='T'?r2(remutotal*CAJA_DEUDA_PCT):fn(a,'deuda_caja');
+    Object.assign(a,{
+      remuimpo:String(remuimpo),remutotal:String(remutotal),remuimpoos:String(remuimpoos),
+      remuimpoto:String(remuimpo),aportejubi:String(aportejubi),aportepatr:String(aportepatr),
+      apafilos:String(apafilos),appatros:String(appatros),trasp_osep:String(trasp_osep),
+      apo_vol:String(apo_vol),tras_vol:String(tras_vol),aporte_caj:String(aporte_caj),
+      contrib_ca:String(contrib_ca),deuda_caja:String(deuda_caja),
+    });
+  });
 }
 
 // ── TABLA DE AGENTES ───────────────────────────────────────────────────
@@ -1447,7 +1513,7 @@ function htmlOS(a){
     ${dpSelect('o-codobra','Obra Social *',fv(a,'codobra'),[['009960','009960 — OSEP (Provincial)'],['001102','001102 — OSPLAD (Nacional)']])}
     ${esOSPLAD&&isDoc?`<div class="alert a-info" style="margin-top:8px"><span class="ai">ℹ</span>Docente OSPLAD: aporte 3%, contribución 6%</div>`:''}
     <div class="g2" style="margin-top:10px">
-      ${dpRO(`Aporte O.S. (${(pctAporte*100).toFixed(2)}%)`,apafilos)}
+      ${dpRO(`Aporte O.S. (${(pctAporte*100).toFixed(0)}%)`,apafilos)}
       ${dpRO(`Contribución Patr. O.S. (${(pctContrib*100).toFixed(0)}%)`,appatros)}
     </div>
   </div>
