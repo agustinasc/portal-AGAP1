@@ -1567,10 +1567,12 @@ function guardarAgente(){
     const premios=gn('s-premios'),vacaciones=gn('s-vacaciones'),canasta=gn('s-canasta_fl'),conceptono=gn('s-conceptono');
     const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
     const isDoc=a.act_doc==='01';
-    const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
-    const aportepatr=r2(remuimpo*PCT_CONTRIB_PATRONAL);const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
+    const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
     const aporte_caj=adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
     const contrib_ca=adCaja==='T'?r2(remutotal*CAJA_CONTRIB_PCT):0;
+    // Conservar aportejubi y aportepatr del CSV — no recalcular para no pisar valores liquidados
+    const aportejubi=fn(a,'aportejubi')||0;
+    const aportepatr=fn(a,'aportepatr')||0;
     Object.assign(a,{
       remusueldo:String(remusueldo),remusac:String(remusac),hsextras:String(hsextras),
       premios:String(premios),vacaciones:String(vacaciones),canasta_fl:String(canasta),
@@ -1588,11 +1590,9 @@ function guardarAgente(){
   if(document.getElementById('o-codobra')){
     const codobra=gv('o-codobra');const remutotal=fn(a,'remutotal');
     const remuimpoos=fn(a,'remuimpoos')||remutotal;const cantAdh=parseInt(a.adherente)||0;
-    const isDoc=a.act_doc!=='00'&&a.act_doc!=='';
-    let pctAporte=0.045,pctContrib=0.09,minAporte=OSEP_APORTE_MIN,minContrib=OSEP_CONTRIB_MIN;
-    if(codobra==='001102'){if(isDoc){pctAporte=0.03;pctContrib=0.06;}else{pctAporte=0.045;pctContrib=0.09;}minAporte=0;minContrib=0;}
-    const apafilos=minAporte>0?Math.max(r2(remutotal*pctAporte),minAporte):r2(remutotal*pctAporte);
-    const appatros=minContrib>0?Math.max(r2(remutotal*pctContrib),minContrib):r2(remutotal*pctContrib);
+    // Conservar apafilos y appatros del CSV — no recalcular para no pisar valores liquidados
+    const apafilos=fn(a,'apafilos')||0;
+    const appatros=fn(a,'appatros')||0;
     a.codobra=codobra;a.apafilos=String(apafilos);a.appatros=String(appatros);
     if(codobra==='009960'){
       const pct=cantAdh>=2?0.05:cantAdh>=1?0.025:0;
