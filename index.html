@@ -1950,7 +1950,7 @@ async function confirmarEnvio(){
       mensaje:`Organismo: ${c.org} | Periodo: ${c.per} | Responsable: ${c.nombreRH} | Agentes: ${agentes.length}`,
     });
     emailOk=true;
-    if(st)st.innerHTML=`<div class="alert a-ok"><span class="ai">✓</span>Email enviado correctamente a ${EMAIL_DESTINO}</div>`;
+    if(st)st.innerHTML=`<div class="alert a-ok"><span class="ai">✓</span>Archivos generados correctamente. Por favor, envielos a ${EMAIL_DESTINO}</div>`;
   }catch(e){
     if(st)st.innerHTML=`<div class="alert a-warn"><span class="ai">⚠</span>Email no enviado. Los archivos se descargaron localmente.</div>`;
   }
