@@ -1155,6 +1155,32 @@ function importarCSV(text,nombre){
     return row;
   });
 
+  // ── Detectar comas en apeynom y domicilio ──
+  const conComas=nuevos.map((r,i)=>{
+    const camposAfectados=[];
+    if(r.apeynom&&r.apeynom.includes(',')) camposAfectados.push(`Nombre: "${r.apeynom}"`);
+    if(r.domicilio&&r.domicilio.includes(',')) camposAfectados.push(`Domicilio: "${r.domicilio}"`);
+    return camposAfectados.length>0?{linea:i+1,cuil:r.cuil||'—',campos:camposAfectados}:null;
+  }).filter(Boolean);
+
+  const avisoComas = conComas.length>0
+    ? `<div class="alert a-err" style="margin-top:6px;font-size:11px">
+        <span class="ai">✕</span>
+        <div>
+          <strong>${conComas.length} agente(s) tienen comas (,) en Apellido/Nombre o Domicilio.</strong><br>
+          Las comas rompen el formato CSV y deben eliminarse antes de enviar.<br>
+          <div style="margin-top:6px;border:1px solid var(--red-border);border-radius:5px;max-height:120px;overflow-y:auto;background:#fff">
+            ${conComas.map(a=>`
+              <div style="padding:4px 8px;border-bottom:1px solid #fdd;font-size:10px">
+                <span style="color:var(--text2)">Línea ${a.linea} · CUIL ${a.cuil}</span><br>
+                ${a.campos.map(c=>`<span style="color:#A32D2D">⚠ ${c}</span>`).join('<br>')}
+              </div>`).join('')}
+          </div>
+          <strong style="font-size:10px">Editá cada agente desde el portal (hacé clic en la fila) y eliminá las comas.</strong>
+        </div>
+      </div>`
+    : '';
+
   // Detectar período original del CSV para mostrar aviso informativo
   const _periodoCSV=(()=>{const idx=COLS.indexOf('periodo');if(idx<0)return'';for(const l of lines){const v=normalizarPeriodo((parsearLineaCSV(l)[idx]||'').trim());if(v&&v!==periodoFormulario)return v;}return'';})();
   const avisoperiodo = _periodoCSV && periodoFormulario
@@ -1172,7 +1198,7 @@ function importarCSV(text,nombre){
         <div class="fs">${nuevos.length} nuevos · ${agentes.length} total acumulado${totalAntes>0?' ('+totalAntes+' previos)':''}</div></div>
       </div>
       <button id="btn-quitar-csv" class="btn-sm btn-danger" style="flex-shrink:0;padding:3px 8px">✕ Quitar</button>
-    </div>${avisoperiodo}`;
+    </div>${avisoperiodo}${avisoComas}`;
   document.getElementById('csv-info').classList.remove('hidden');
   document.getElementById('dz-csv').style.display='none';
   document.getElementById('btn-quitar-csv').addEventListener('click',function(){
@@ -1399,7 +1425,7 @@ function htmlPersonales(a){
     </div>
     <div class="g3">
       ${dpSelect('p-conyuge','Cónyuge',fv(a,'conyuge'),[['0','No'],['1','Sí']])}
-      ${dpCampo('p-adherente','Adherentes OSEP',fv(a,'adherente'),'number')}
+      ${dpCampo('p-adherente','Adherente OSPLAD (siempre 0)','0','number','readonly style="background:var(--bg2);color:var(--text2);width:100%"')}
       ${dpCampo('p-asigfliar','Asig. Familiar',fv(a,'asigfliar'),'number')}
     </div>
   </div>
@@ -1583,9 +1609,33 @@ function guardarAgente(){
 
   // ── Personales (si los campos están en el DOM) ──
   if(document.getElementById('p-cuil')){
-    a.cuil=gv('p-cuil');a.nroagente=gv('p-nroagente');a.apeynom=gv('p-apeynom');
-    a.domicilio=gv('p-domicilio');a.fecha_nac=gv('p-fecha_nac');a.sexo=gv('p-sexo');
-    a.canthijo=gv('p-canthijo');a.conyuge=gv('p-conyuge');a.adherente=gv('p-adherente');
+    const apeynom=gv('p-apeynom');
+    const domicilio=gv('p-domicilio');
+    // Validar comas
+    const errComas=[];
+    if(apeynom.includes(',')) errComas.push('Apellido y Nombre');
+    if(domicilio.includes(',')) errComas.push('Domicilio');
+    if(errComas.length>0){
+      // Mostrar error en el footer del panel sin cerrar
+      const footer=document.querySelector('.detail-footer');
+      const errId='err-comas-panel';
+      let errEl=document.getElementById(errId);
+      if(!errEl){
+        errEl=document.createElement('div');
+        errEl.id=errId;
+        errEl.className='alert a-err';
+        errEl.style.cssText='margin:8px 18px 0;font-size:11px;flex-basis:100%;order:-1';
+        footer.prepend(errEl);
+      }
+      errEl.innerHTML=`<span class="ai">✕</span><div><strong>No se puede guardar.</strong> Eliminá las comas (,) del campo: <strong>${errComas.join(' y ')}</strong>. Las comas no están permitidas.</div>`;
+      return; // No guardar
+    }
+    // Limpiar error si ya no hay comas
+    const errExist=document.getElementById('err-comas-panel');
+    if(errExist) errExist.remove();
+    a.cuil=gv('p-cuil');a.nroagente=gv('p-nroagente');a.apeynom=apeynom;
+    a.domicilio=domicilio;a.fecha_nac=gv('p-fecha_nac');a.sexo=gv('p-sexo');
+    a.canthijo=gv('p-canthijo');a.conyuge=gv('p-conyuge');a.adherente='0';
     a.asigfliar=gv('p-asigfliar');a.fechaing=gv('p-fechaing');a.fechabaja=gv('p-fechabaja');
   }
 
