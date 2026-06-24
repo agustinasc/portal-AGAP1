@@ -1151,6 +1151,7 @@ function importarCSV(text,nombre){
     // Si el período del CSV difiere del declarado, se pisa automáticamente
     if(periodoFormulario && row.periodo !== periodoFormulario) row.periodo = periodoFormulario;
     if((!row.codigo||parseInt(row.codigo)===0)&&orgData) row.codigo=String(orgData.c);
+    row._sacnr='0'; // SAC No Remunerativo — siempre 0 al importar, se carga manualmente
     return row;
   });
 
@@ -1346,7 +1347,7 @@ function abrirNuevoAgente(){
   nuevo.codobra='009960';nuevo.zonageo='08';nuevo.tipoliq='1';nuevo.codorigen='0';
   nuevo.ad_caja_co='F';nuevo.tiene_deud='F';nuevo.funcionari='F';nuevo.tiene_fdo_='F';
   nuevo.sexo='M';nuevo.dias_traba='30';nuevo.d_svco='5000.00';nuevo.d_ss='4400.00';
-  nuevo.act_doc='00';nuevo.codestado='0';
+  nuevo.act_doc='00';nuevo.codestado='0';nuevo._sacnr='0';
   nuevo.periodo=document.getElementById('d-periodo').value;
   nuevo.codigo=String(ORGS.find(o=>o.n===currentOrg)?.c||'');
   agentes.push(nuevo);mostrarTablaAgentes();abrirAgente(agentes.length-1);
@@ -1472,8 +1473,10 @@ function recalcSS(){
   const gn=id=>{const el=document.getElementById(id);return el?parseFloat(el.value)||0:0;};
   const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
   const remusueldo=gn('s-remusueldo'),remusac=gn('s-remusac'),hsextras=gn('s-hsextras');
+  const sacnr=gn('s-sacnr'); // SAC No Remunerativo → suma a conceptono en el CSV
   const premios=gn('s-premios'),vacaciones=gn('s-vacaciones'),canasta=gn('s-canasta_fl'),conceptono=gn('s-conceptono');
-  const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
+  const conceptonoTotal=r2(conceptono+sacnr);
+  const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptonoTotal+premios+vacaciones+canasta);
   const a=agenteIdx!==null?agentes[agenteIdx]:null;const isDoc=a?fv(a,'act_doc')==='01':false;
   const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
   const aportepatr=r2(remuimpo*PCT_CONTRIB_PATRONAL);const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
@@ -1490,8 +1493,13 @@ function recalcSS(){
 function htmlSS(a){
   const isDoc=fv(a,'act_doc')==='01';
   const remusueldo=fn(a,'remusueldo'),remusac=fn(a,'remusac'),hsextras=fn(a,'hsextras');
-  const premios=fn(a,'premios'),vacaciones=fn(a,'vacaciones'),canasta=fn(a,'canasta_fl'),conceptono=fn(a,'conceptono');
-  const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
+  const sacnr=parseFloat(fv(a,'_sacnr'))||0; // SAC NR — campo visual interno
+  const premios=fn(a,'premios'),vacaciones=fn(a,'vacaciones'),canasta=fn(a,'canasta_fl');
+  // conceptono en el agente ya tiene CNR+SAC NR fusionados — para mostrar separamos
+  const conceptonoBruto=fn(a,'conceptono'); // total en CSV = CNR + SAC NR
+  const cnrPuro=r2(conceptonoBruto-sacnr);  // CNR puro (sin SAC NR)
+  const remuimpo=r2(remusueldo+remusac+hsextras);
+  const remutotal=r2(remuimpo+conceptonoBruto+premios+vacaciones+canasta);
   const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
   const aportepatr=r2(remuimpo*PCT_CONTRIB_PATRONAL);const adCaja=fv(a,'ad_caja_co');const tieneDeud=fv(a,'tiene_deud');
   const aporte_caj=adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
@@ -1502,7 +1510,8 @@ function htmlSS(a){
     <div class="field-group-title">Remuneraciones base</div>
     <div class="g3">
       ${dpCampo('s-remusueldo','Rem. Sueldo *',fv(a,'remusueldo'),'number',oninput)}
-      ${dpCampo('s-remusac','Rem. SAC *',fv(a,'remusac'),'number',oninput)}
+      ${dpCampo('s-remusac','SAC Remunerativo *',fv(a,'remusac'),'number',oninput)}
+      ${dpCampo('s-sacnr','SAC No Remunerativo',fv(a,'_sacnr')||'0','number',oninput)}
       ${dpCampo('s-hsextras','Horas Extras $',fv(a,'hsextras'),'number',oninput)}
     </div>
     <div class="g3">
@@ -1510,7 +1519,7 @@ function htmlSS(a){
       ${dpCampo('s-vacaciones','Vacaciones *',fv(a,'vacaciones'),'number',oninput)}
       ${dpCampo('s-canasta_fl','Canasta Familiar *',fv(a,'canasta_fl'),'number',oninput)}
     </div>
-    ${dpCampo('s-conceptono','Conceptos No Remunerativos *',fv(a,'conceptono'),'number',oninput)}
+    ${dpCampo('s-conceptono','Conceptos No Remunerativos (CNR) *',String(cnrPuro>=0?cnrPuro:0),'number',oninput)}
   </div>
   ${esRetiro?`<div class="field-group" style="border:2px solid #C2410C;border-radius:10px;background:#FFF7ED">
     <div class="field-group-title" style="color:#9A3412">📋 Retiro Voluntario — Rem. Imp. O.S. (100%)</div>
@@ -1651,22 +1660,25 @@ function guardarAgente(){
   // ── Seguridad Social ──
   if(document.getElementById('s-remusueldo')){
     const remusueldo=gn('s-remusueldo'),remusac=gn('s-remusac'),hsextras=gn('s-hsextras');
+    const sacnr=gn('s-sacnr'); // SAC No Remunerativo — se suma a conceptono en el CSV
     const premios=gn('s-premios'),vacaciones=gn('s-vacaciones'),canasta=gn('s-canasta_fl'),conceptono=gn('s-conceptono');
-    const remuimpo=r2(remusueldo+remusac+hsextras);const remutotal=r2(remuimpo+conceptono+premios+vacaciones+canasta);
+    const conceptonoTotal=r2(conceptono+sacnr); // lo que va al CSV
+    const remuimpo=r2(remusueldo+remusac+hsextras);
+    const remutotal=r2(remuimpo+conceptonoTotal+premios+vacaciones+canasta);
     const isDoc=a.act_doc==='01';
     const adCaja=gv('s-ad_caja_co');const tieneDeud=gv('s-tiene_deud');
-    // En retiro: remuimpoos (100%) lo tipea el usuario; sino = remutotal.
     const remuimpoos=esRetiro?(gn('s-remuimpoos')||remutotal):remutotal;
     const baseOS=remuimpoos;
     const aporte_caj=adCaja==='T'?r2(baseOS*CAJA_APORTE_PCT):0;
     const contrib_ca=adCaja==='T'?r2(baseOS*CAJA_CONTRIB_PCT):0;
-    // Conservar aportejubi y aportepatr del CSV — no recalcular para no pisar valores liquidados
     const aportejubi=fn(a,'aportejubi')||0;
     const aportepatr=fn(a,'aportepatr')||0;
     Object.assign(a,{
       remusueldo:String(remusueldo),remusac:String(remusac),hsextras:String(hsextras),
       premios:String(premios),vacaciones:String(vacaciones),canasta_fl:String(canasta),
-      conceptono:String(conceptono),remuimpo:String(remuimpo),remutotal:String(remutotal),
+      conceptono:String(conceptonoTotal), // CSV: CNR + SAC NR fusionados
+      _sacnr:String(sacnr),              // campo visual interno — NO va al CSV
+      remuimpo:String(remuimpo),remutotal:String(remutotal),
       remuimpoos:String(remuimpoos),remuimpoto:String(remuimpo),
       aportejubi:String(aportejubi),aportepatr:String(aportepatr),
       ad_caja_co:adCaja,aporte_caj:String(aporte_caj),contrib_ca:String(contrib_ca),
