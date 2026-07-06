@@ -1740,7 +1740,9 @@ function eliminarAgente(){
 function procesarValidaciones(){
   const errores=[];const cuils=[],ags=[];
   const orgData=orgsActivos.find(o=>o.n===currentOrg);
-  const periodoDec=document.getElementById('d-periodo').value;
+  const periodoDec=document.getElementById('d-periodo').value.trim();
+  // Completar período vacío con el declarado (evita error 13 por campos en blanco)
+  agentes.forEach(a=>{ if(!(a.periodo||'').trim()) a.periodo = periodoDec; });
   agentes.forEach((a,idx)=>{
     const nl=idx+1;const cuil=fv(a,'cuil'),agente=fv(a,'nroagente'),apeynom=fv(a,'apeynom');
     const esMag=fv(a,'act_doc')==='01';
