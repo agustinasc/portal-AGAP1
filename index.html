@@ -589,6 +589,8 @@ tr:last-child td{border-bottom:none}
   </div>
 </div><!-- /main -->
 
+
+
 <script>
 // ══════════════════════════════════════════════════════════════════════
 // SUPABASE — PERSISTENCIA DE BORRADORES
@@ -796,7 +798,7 @@ const ERRORES_DEF={
   78:['ADVERTENCIA','contrib_ca > máximo Caja (3% sueldo gobernador)'],
   53:['ADVERTENCIA','aportejubi no coincide'],54:['ADVERTENCIA','d_svco debe ser 5000.00'],
   55:['ADVERTENCIA','d_ss debe ser 4400.00'],60:['ADVERTENCIA','fechaing vacía'],
-  61:['ADVERTENCIA','fechaing formato inválido'],62:['ADVERTENCIA','fecha_nac formato inválido'],
+  61:['CRÍTICO','fechaing formato inválido'],62:['CRÍTICO','fecha_nac formato inválido'],
   63:['ADVERTENCIA','agente menor de 18 años al ingreso'],64:['ADVERTENCIA','fechaing anterior a fecha_nac'],
   65:['ADVERTENCIA','apafilos < mínimo OSEP'],66:['ADVERTENCIA','appatros < mínimo OSEP'],
   67:['ADVERTENCIA','trasp_osep < mínimo OSEP'],68:['ADVERTENCIA','apo_vol no coincide'],
@@ -892,6 +894,31 @@ function mostrarToast(msg='✓ Cambios guardados'){
   const t=document.getElementById('save-toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+<!-- MODAL -->
+function mostrarAvisoEnviar(){
+  // Reutiliza el overlay de confirmación con un cartel grande y llamativo
+  const ov=document.createElement('div');
+  ov.className='confirm-overlay';
+  ov.id='aviso-enviar-overlay';
+  ov.innerHTML=`
+    <div class="confirm-box" style="max-width:440px;text-align:center;padding:32px 28px;border-top:6px solid var(--green)">
+      <div style="font-size:46px;line-height:1;margin-bottom:14px">📧</div>
+      <div style="font-size:20px;font-weight:800;color:var(--green-dark);margin-bottom:10px">
+        ¡Archivos generados!
+      </div>
+      <div style="font-size:15px;font-weight:600;color:var(--text);line-height:1.5;margin-bottom:6px">
+        Por favor, enviá los archivos generados
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:22px">
+        Adjuntá el CSV y la DDJJ (PDF) al correo:<br>
+        <strong style="color:var(--text)">${EMAIL_DESTINO}</strong>
+      </div>
+      <button class="btn-primary" style="padding:10px 28px;font-size:14px"
+        onclick="document.getElementById('aviso-enviar-overlay').remove()">Entendido</button>
+    </div>`;
+  document.body.appendChild(ov);
 }
 
 function init(){
@@ -1347,7 +1374,7 @@ function abrirNuevoAgente(){
   nuevo.codobra='009960';nuevo.zonageo='08';nuevo.tipoliq='1';nuevo.codorigen='0';
   nuevo.ad_caja_co='F';nuevo.tiene_deud='F';nuevo.funcionari='F';nuevo.tiene_fdo_='F';
   nuevo.sexo='M';nuevo.dias_traba='30';nuevo.d_svco='5000.00';nuevo.d_ss='4400.00';
-  nuevo.act_doc='00';nuevo.codestado='0';nuevo._sacnr='0';
+  nuevo.act_doc='00';nuevo.codestado='0';nuevo._sacnr='0';nuevo.porceadi='6';
   nuevo.periodo=document.getElementById('d-periodo').value;
   nuevo.codigo=String(ORGS.find(o=>o.n===currentOrg)?.c||'');
   agentes.push(nuevo);mostrarTablaAgentes();abrirAgente(agentes.length-1);
@@ -1444,10 +1471,10 @@ function htmlLaborales(a){
     <div class="field-group-title">Datos laborales</div>
     <div class="g3">
       ${dpSelect('l-zonageo','Zona Geográfica',fv(a,'zonageo'),[['08','08'],['09','09']])}
-      ${dpCampo('l-actividad','Actividad',fv(a,'actividad'))}
+      ${dpSelect('l-actividad','Actividad *',fv(a,'actividad'),ACT_PERM.map(c=>[c,c]))}
       ${dpCampo('l-porcreduc','Porc. Reducción',fv(a,'porcreduc'),'number')}
     </div>
-    <div class="g2">${dpCampo('l-saf','SAF',fv(a,'saf'))}${dpCampo('l-ubicacion','Ubicación Presupuestaria',fv(a,'ubicacion'))}</div>
+    <div class="g2">${dpCampo('l-saf','SAF',fv(a,'saf'))}${dpCampo('l-ubicacion','Ubicación Presupuestaria* (obligatorio)',fv(a,'ubicacion'))}</div>
     <div class="g3">
       ${dpSelect('l-tipoliq','Tipo Liquidación',fv(a,'tipoliq'),[['1','1 — Autoliquidación'],['2','2 — Reemplaza LH']])}
       ${dpSelect('l-funcionari','Funcionario',fv(a,'funcionari'),[['F','No'],['T','Sí']])}
@@ -1614,6 +1641,52 @@ function guardarAgente(){
   const a=agentes[agenteIdx];
   const gv=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
   const gn=id=>parseFloat(gv(id))||0;
+
+  // ── Obligatorios: no deja guardar si falta actividad o ubicación ──
+  const faltantes=[];
+  if(document.getElementById('l-actividad') && !gv('l-actividad')) faltantes.push('Actividad');
+  if(document.getElementById('l-ubicacion') && !gv('l-ubicacion')) faltantes.push('Ubicación Presupuestaria');
+  if(faltantes.length>0){
+    // Si el campo que falta está en otra solapa, la abrimos para que lo vea
+    if(dpTabActual!=='laborales') dpTab('laborales');
+    const footer=document.querySelector('.detail-footer');
+    let errEl=document.getElementById('err-comas-panel');
+    if(!errEl){
+      errEl=document.createElement('div');
+      errEl.id='err-comas-panel';
+      errEl.className='alert a-err';
+      errEl.style.cssText='margin:8px 18px 0;font-size:11px;flex-basis:100%;order:-1';
+      footer.prepend(errEl);
+    }
+    errEl.innerHTML=`<span class="ai">✕</span><div><strong>Para continuar debés completar:</strong> ${faltantes.join(' y ')} <span style="color:var(--text2)">(solapa Datos Laborales)</span>.</div>`;
+    return; // corta el guardado
+  }
+
+  // ── Validar formato de fechas AAAAMMDD ──
+  const errFechas=[];
+  const chkFecha=(id,label,obligatoria)=>{
+    if(!document.getElementById(id)) return;
+    const val=gv(id);
+    if(!val){ if(obligatoria) errFechas.push(`${label} (obligatoria)`); return; }
+    if(!fechaOk(val)) errFechas.push(`${label} debe ser AAAAMMDD (8 dígitos)`);
+  };
+  chkFecha('p-fecha_nac','Fecha de nacimiento',true);
+  chkFecha('p-fechaing','Fecha de ingreso al cargo',true);
+  chkFecha('p-fechabaja','Fecha de baja',false); // vacío permitido
+  if(errFechas.length>0){
+    if(dpTabActual!=='personales') dpTab('personales');
+    const footer=document.querySelector('.detail-footer');
+    let errEl=document.getElementById('err-comas-panel');
+    if(!errEl){
+      errEl=document.createElement('div');
+      errEl.id='err-comas-panel';
+      errEl.className='alert a-err';
+      errEl.style.cssText='margin:8px 18px 0;font-size:11px;flex-basis:100%;order:-1';
+      footer.prepend(errEl);
+    }
+    errEl.innerHTML=`<span class="ai">✕</span><div><strong>Revisá las fechas:</strong> ${errFechas.join(' · ')}.</div>`;
+    return; // no guarda
+  }
 
   // ── Personales (si los campos están en el DOM) ──
   if(document.getElementById('p-cuil')){
@@ -2002,9 +2075,20 @@ function descargarPDF(){
 
 function generarCSVString(){
   const c=campos();const orgData=ORGS.find(o=>o.n===currentOrg);
+  // Relleno que usa el SILI para campos vacíos (para que el TXT no quede con blancos)
+  const DEFAULTS_CSV = {
+    canthijo:'0', rebpromo:'0', porcreduc:'0', porceadi:'6', cant_hsext:'0', por_retiro:'0', saf:'0',
+    aportvolun:'0.00', exessocial:'0.00', asigfliar:'0.00', exeosocial:'0.00', impoadicos:'0.00',
+    coseguro:'0.00', d_svca:'0.00', d_sc:'0.00', remu_doc:'0.00', ap_dcto788:'0.00',
+    aporte_dif:'0.00', rem_retiro:'0.00'
+  };
   return agentes.map(a=>{
     const row={...a};row.periodo=c.per;row.declara=c.tipo;row.codigo=String(orgData?.c||'');
-    return COLS.map(col=>(row[col]||'')).join(',');
+    return COLS.map(col=>{
+      let v = (row[col]!=null ? String(row[col]).trim() : '');
+      if(v==='' && DEFAULTS_CSV[col]!==undefined) v = DEFAULTS_CSV[col];
+      return v;
+    }).join(',');
   }).join('\n');
 }
 
@@ -2085,6 +2169,8 @@ async function confirmarEnvio(){
         <button class="btn-sm btn-primary" onclick="nuevoEnvio()">Nuevo envío</button>
       </div>`;
   }
+  mostrarAvisoEnviar();
+
 }
 
 function nuevoEnvio(){
