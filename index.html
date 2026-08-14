@@ -278,7 +278,7 @@ tr:last-child td{border-bottom:none}
     <div class="step-sep">›</div>
     <div class="step" id="step-4"><div class="sn">4</div>DDJJ</div>
     <div class="step-sep">›</div>
-    <div class="step" id="step-5"><div class="sn">5</div>Confirmar envío</div>
+    <div class="step" id="step-5"><div class="sn">5</div>Confirmar descarga</div>
   </div>
 
   <!-- PASO 1 -->
@@ -309,7 +309,7 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <div id="paso1-err" class="alert a-err hidden" style="margin-top:10px"><span class="ai">✕</span><span id="paso1-err-msg"></span></div>
-    <button class="btn-primary btn-full" onclick="irPaso2()">Continuar →</button>
+    <button class="btn-primary btn-full" id="btn-paso1" onclick="irPaso2()">Continuar →</button>
   </div>
 
   <!-- PASO 2 -->
@@ -400,7 +400,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="btn-row" style="margin-top:14px">
       <button class="btn-sm" onclick="irPaso2show()">← Editar agentes</button>
-      <button class="btn-warn hidden" id="btn-aceptar-warn" onclick="irPaso4()">Enviar con advertencias →</button>
+      <button class="btn-warn hidden" id="btn-aceptar-warn" onclick="irPaso4()">Descargar con advertencias →</button>
       <button class="btn-primary hidden" id="btn-continuar-ok" onclick="irPaso4()">Continuar →</button>
     </div>
   </div>
@@ -408,12 +408,12 @@ tr:last-child td{border-bottom:none}
   <!-- PASO 4 -->
   <div id="paso-4" class="card hidden">
     <div class="ct">DDJJ — Nota de presentación</div>
-    <div class="cs">Revisá los totales calculados del CSV. Si todo es correcto, confirmá el envío.</div>
+    <div class="cs">Revisá los totales calculados del CSV. Si todo es correcto, confirmá la descarga.</div>
     <div class="ddjj-preview" id="ddjj-preview"></div>
     <div class="btn-row">
       <button class="btn-sm" onclick="irPaso3show()">← Volver</button>
       <button class="btn-sm btn-info" onclick="descargarPDF()">⬇ Descargar PDF</button>
-      <button class="btn-primary" onclick="irPaso5()">Confirmar y enviar →</button>
+      <button class="btn-primary" onclick="irPaso5()">Confirmar y descargar →</button>
     </div>
   </div>
 
@@ -424,9 +424,9 @@ tr:last-child td{border-bottom:none}
 
   <!-- HISTORIAL -->
   <div class="card" style="margin-top:4px">
-    <div class="ct">Historial de envíos</div>
-    <div class="cs">Envíos de esta sesión</div>
-    <div id="hist-table"><p style="font-size:11px;color:var(--text2)">Sin envíos aún.</p></div>
+    <div class="ct">Historial de descargas</div>
+    <div class="cs">Descargas de esta sesión</div>
+    <div id="hist-table"><p style="font-size:11px;color:var(--text2)">Sin descargas aún.</p></div>
   </div>
 </div>
 
@@ -434,23 +434,23 @@ tr:last-child td{border-bottom:none}
 <div id="screen-admin" class="hidden">
   <div class="tabs">
     <button class="tab active" onclick="adminTab('resumen')">Resumen</button>
-    <button class="tab" onclick="adminTab('envios')">Todos los envíos</button>
+    <button class="tab" onclick="adminTab('envios')">Todas las descargas</button>
     <button class="tab" onclick="adminTab('organismos')">Organismos</button>
     <button class="tab" onclick="adminTab('parametros')">⚙ Parámetros</button>
   </div>
   <div id="at-resumen">
     <div class="metric-grid">
-      <div class="metric"><div class="mv" id="m-tot">0</div><div class="ml">Envíos totales</div></div>
+      <div class="metric"><div class="mv" id="m-tot">0</div><div class="ml">Descargas totales</div></div>
       <div class="metric"><div class="mv" id="m-ok" style="color:var(--green-dark)">0</div><div class="ml">Sin errores</div></div>
       <div class="metric"><div class="mv" id="m-warn" style="color:var(--amber)">0</div><div class="ml">Con advertencias</div></div>
       <div class="metric"><div class="mv" id="m-crit" style="color:var(--red)">0</div><div class="ml">Con críticos</div></div>
     </div>
-    <div class="card"><div class="ct" style="margin-bottom:10px">Últimos envíos</div><div id="a-recent"><p style="font-size:11px;color:var(--text2)">Sin envíos.</p></div></div>
+    <div class="card"><div class="ct" style="margin-bottom:10px">Últimas descargas</div><div id="a-recent"><p style="font-size:11px;color:var(--text2)">Sin descargas.</p></div></div>
   </div>
   <div id="at-envios" class="hidden">
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="ct" style="margin:0">Todos los envíos</div>
+        <div class="ct" style="margin:0">Todas las descargas</div>
         <div style="display:flex;gap:6px">
           <input type="text" id="filtro-org" placeholder="Filtrar organismo..." style="width:160px" oninput="renderAdminAll()">
           <button class="btn-sm btn-primary" onclick="exportarRegistroCSV()">Exportar registro</button>
@@ -480,11 +480,20 @@ tr:last-child td{border-bottom:none}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div>
           <div class="ct" style="margin:0">Parámetros de cálculo</div>
-          <div style="font-size:11px;color:var(--text2)">Actualizá topes, bases y alícuotas sin modificar el código. Los cambios se aplican inmediatamente en la sesión actual.</div>
+          <div style="font-size:11px;color:var(--text2)">Se guardan por período en el servidor. Los organismos los reciben al ingresar el período en el Paso 1.</div>
         </div>
-        <button class="btn-sm btn-primary" onclick="guardarParametros()">✓ Guardar cambios</button>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div>
+            <label style="font-size:10px;color:var(--text2)">Período</label>
+            <input type="text" id="pm-periodo" maxlength="6" placeholder="202507" style="width:90px">
+          </div>
+          <button class="btn-sm" onclick="cargarTopesPeriodo()">↻ Cargar</button>
+          <button class="btn-sm btn-primary" onclick="guardarParametros()">✓ Guardar en servidor</button>
+        </div>
       </div>
-      <div id="param-ok" class="alert a-ok hidden" style="margin-bottom:10px"><span class="ai">✓</span>Parámetros actualizados correctamente.</div>
+      <div id="param-ok" class="alert a-ok hidden" style="margin-bottom:10px"><span class="ai">✓</span><span id="param-ok-msg">Parámetros actualizados correctamente.</span></div>
+      <div id="param-err" class="alert a-err hidden" style="margin-bottom:10px"><span class="ai">✕</span><span id="param-err-msg"></span></div>
+      <div id="param-info" class="alert a-info hidden" style="margin-bottom:10px"><span class="ai">ℹ</span><span id="param-info-msg"></span></div>
 
       <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">ANSES — Seguridad Social</div>
       <div class="g4" style="margin-bottom:12px">
@@ -510,7 +519,7 @@ tr:last-child td{border-bottom:none}
       <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)">Caja Complementaria 82 Móvil</div>
       <div class="g4" style="margin-bottom:16px">
         <div><label>Tope mín. aporte/contrib.</label><input type="number" id="pm-caja-min" step="0.01"></div>
-        <div><label>Sueldo del Gobernador</label><input type="number" id="pm-caja-gob" step="0.01"></div>
+        <div><label>Sueldo del Gobernador</label><input type="number" id="pm-caja-gob" step="0.01" oninput="actualizarTopeCaja()"></div>
         <div style="padding-top:22px;font-size:11px;color:var(--text2)" id="pm-caja-max-lbl">Tope máx: —</div>
         <div></div>
       </div>
@@ -573,12 +582,12 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <div class="rs" style="color:var(--amber);background:var(--amber-light);border:1px solid var(--amber-border);border-radius:var(--radius);padding:8px 11px;margin-bottom:16px">
-      ⚠ Se copiará la estructura de agentes. Revisá los datos antes de enviar, ya que algunos valores (remuneraciones, días, etc.) pueden haber cambiado entre períodos.
+      ⚠ Se copiará la estructura de agentes. Revisá los datos antes de descargar, ya que algunos valores (remuneraciones, días, etc.) pueden haber cambiado entre períodos.
     </div>
     <div class="confirm-btns">
       <button class="btn-sm btn-danger" id="reutilizar-no">No, descartar borrador</button>
       <div style="flex:1"></div>
-      <button class="btn-sm" id="reutilizar-ignorar">Continuar sin agentes</button>
+      <button class="btn-sm" id="reutilizar-ignorar">Continuar sin agentes (conserva el borrador)</button>
       <button class="btn-sm btn-primary" id="reutilizar-si">Sí, copiar agentes →</button>
     </div>
   </div>
@@ -628,8 +637,8 @@ function setSyncIndicator(estado, texto){
   syncEstado = estado;
 }
 
-async function sbGuardar(organismo, agentes){
-  await fnLlamar('guardar', organismo, currentClave, { agentes });
+async function sbGuardar(organismo, agentes, periodo){
+  await fnLlamar('guardar', organismo, currentClave, { agentes, periodo });
 }
 
 async function sbCargar(organismo){
@@ -641,13 +650,91 @@ async function sbLimpiar(organismo){
   await fnLlamar('limpiar', organismo, currentClave);
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// TOPES POR PERÍODO — tabla public.topes en Supabase
+// Lectura: directa por PostgREST (policy topes_lectura para anon).
+// Escritura: por Edge Function, que valida la clave de admin.
+// ══════════════════════════════════════════════════════════════════════
+const REST_URL = 'https://pllltatkepnzxcqnfbfl.supabase.co/rest/v1';
+
+// Mapeo clave de TOPES ↔ columna de la tabla
+const TOPES_COLS = {
+  ANSES_APORTE_MIN:'anses_aporte_min', ANSES_APORTE_MAX:'anses_aporte_max',
+  ANSES_BASE_MAX:'anses_base_max',     ANSES_CONTRIB_MIN:'anses_contrib_min',
+  PCT_APORTE_TRAB:'pct_aporte_trab',   PCT_CONTRIB_PATRONAL:'pct_contrib_patronal',
+  OSEP_APORTE_MIN:'osep_aporte_min',   OSEP_CONTRIB_MIN:'osep_contrib_min',
+  OSEP_TRASP_MIN:'osep_trasp_min',     OSEP_BASE_MIN:'osep_base_min',
+  CAJA_APORTE_MIN:'caja_aporte_min',   CAJA_SUELDO_GOB:'caja_sueldo_gob',
+  D_SVCO_VAL:'d_svco_val',             D_SS_VAL:'d_ss_val'
+};
+
+// Valores del código, como respaldo si el servidor no responde.
+// Se completa en sincronizarTopes(), porque TOPES se declara más abajo.
+let TOPES_FALLBACK = null;
+let topesPeriodo = null;   // período de los topes efectivamente cargados
+let topesOrigen  = 'codigo'; // 'servidor' | 'codigo'
+
+// Garantiza que TOPES corresponda al período pedido, trayéndolo de la base.
+// Devuelve {ok:true} o {ok:false, motivo:'inexistente'|'red', error}.
+async function asegurarTopes(periodo){
+  if(topesOrigen==='servidor' && topesPeriodo===periodo) return {ok:true};
+  try{
+    const fila=await sbCargarTopes(periodo);
+    if(!fila){ aplicarTopesFallback(); return {ok:false, motivo:'inexistente'}; }
+    aplicarTopes(fila, periodo);
+    return {ok:true};
+  }catch(e){
+    aplicarTopesFallback();
+    return {ok:false, motivo:'red', error:e.message};
+  }
+}
+
+// Trae los topes de un período. Devuelve el objeto o null si no existe la fila.
+async function sbCargarTopes(periodo){
+  const resp = await fetch(`${REST_URL}/topes?periodo=eq.${encodeURIComponent(periodo)}&select=*`, {
+    headers: { 'Authorization':'Bearer '+SUPABASE_ANON, 'apikey':SUPABASE_ANON }
+  });
+  if(!resp.ok) throw new Error('Error '+resp.status);
+  const filas = await resp.json();
+  return (filas && filas.length) ? filas[0] : null;
+}
+
+// Aplica una fila de la tabla al objeto TOPES en memoria
+function aplicarTopes(fila, periodo){
+  Object.keys(TOPES_COLS).forEach(k=>{
+    const v = parseFloat(fila[TOPES_COLS[k]]);
+    if(!isNaN(v)) TOPES[k] = v;
+  });
+  sincronizarTopes();
+  topesPeriodo = periodo;
+  topesOrigen  = 'servidor';
+}
+
+// Vuelve a los valores del código
+function aplicarTopesFallback(){
+  if(TOPES_FALLBACK) Object.assign(TOPES, TOPES_FALLBACK);
+  sincronizarTopes();
+  topesPeriodo = null;
+  topesOrigen  = 'codigo';
+}
+
+async function sbGuardarTopes(periodo, topes){
+  await fnLlamar('guardarTopes', 'ADMIN', currentClave, { periodo, topes });
+}
+
 function guardarEnSheets(){
   if(!currentOrg || currentOrg === 'ADMIN') return;
+  // No guardar mientras los topes no vengan de la base: evita persistir
+  // importes calculados con los valores del código.
+  if(topesOrigen!=='servidor'){
+    setSyncIndicator('err','✕ Sin parámetros del período');
+    return;
+  }
   clearTimeout(syncTimeout);
   setSyncIndicator('ing', '⟳ Guardando...');
   syncTimeout = setTimeout(async ()=>{
     try{
-      await sbGuardar(currentOrg, agentes);
+      await sbGuardar(currentOrg, agentes, (document.getElementById('d-periodo').value||'').trim());
       setSyncIndicator('ok', '✓ Guardado');
     } catch(e){
       console.error('Error guardando:', e);
@@ -669,6 +756,14 @@ async function verificarBorrador(){
     const resultado = await sbCargar(currentOrg);
     if(resultado && resultado.agentes && resultado.agentes.length > 0){
       borradorAgentes = resultado.agentes;
+      // El período viene guardado con el borrador. Si la fila es vieja y no lo
+      // tiene, se cae al método anterior: el período más frecuente entre los agentes.
+      if(resultado.periodo && /^\d{6}$/.test(String(resultado.periodo).trim())){
+        borradorPeriodo = String(resultado.periodo).trim();
+        document.getElementById('borrador-count').textContent = borradorAgentes.length;
+        document.getElementById('borrador-banner').classList.remove('hidden');
+        return;
+      }
       // Detectar el período predominante en los agentes del borrador
       const periodos = borradorAgentes.map(a => (a.periodo||'').trim()).filter(Boolean);
       if(periodos.length > 0){
@@ -684,11 +779,29 @@ async function verificarBorrador(){
   } catch(e){ console.error('Error verificando borrador:', e); }
 }
 
-function cargarBorrador(){
+async function cargarBorrador(){
+  // El período del borrador manda; si no se pudo detectar, se usa el del formulario.
+  const per = borradorPeriodo || (document.getElementById('d-periodo').value||'').trim();
+  if(!/^\d{6}$/.test(per)){
+    mostrarToast('✕ No se pudo determinar el período del borrador. Completá el período y usá Continuar.');
+    return;
+  }
+
+  // Los importes se recalculan con los parámetros del período: nunca con los del código.
+  const r = await asegurarTopes(per);
+  if(!r.ok){
+    mostrarToast(r.motivo==='inexistente'
+      ? `✕ No hay parámetros de cálculo para el período ${per}. Comunicate con la CIA.`
+      : '✕ No se pudieron obtener los parámetros del servidor. Reintentá.');
+    return;
+  }
+
   agentes = [...borradorAgentes];
+  recalcularSilencioso();
+  if(!document.getElementById('d-periodo').value) document.getElementById('d-periodo').value = per;
   document.getElementById('borrador-banner').classList.add('hidden');
   setStep(2); mostrarTablaAgentes();
-  mostrarToast(`✓ ${agentes.length} agentes restaurados`);
+  mostrarToast(`✓ ${agentes.length} agentes restaurados y recalculados (período ${per})`);
 }
 
 function descartarBorrador(){
@@ -801,8 +914,10 @@ const ERRORES_DEF={
   61:['CRÍTICO','fechaing formato inválido'],62:['CRÍTICO','fecha_nac formato inválido'],
   63:['ADVERTENCIA','agente menor de 18 años al ingreso'],64:['ADVERTENCIA','fechaing anterior a fecha_nac'],
   65:['ADVERTENCIA','apafilos < mínimo OSEP'],66:['ADVERTENCIA','appatros < mínimo OSEP'],
-  67:['ADVERTENCIA','trasp_osep < mínimo OSEP'],68:['ADVERTENCIA','apo_vol no coincide'],
-  69:['ADVERTENCIA','tras_vol vacío con apo_vol>0'],70:['ADVERTENCIA','tras_vol no coincide'],
+  67:['ADVERTENCIA','trasp_osep < mínimo OSEP'],68:['ADVERTENCIA','apo_vol no coincide con el 2.5% ni con el 5%'],
+  69:['ADVERTENCIA','tras_vol vacío o cero con apo_vol>0'],70:['ADVERTENCIA','tras_vol no coincide con el 0.5%'],
+  79:['ADVERTENCIA','apo_vol < mínimo (base mínima × 2.5%)'],80:['ADVERTENCIA','tras_vol < mínimo OSEP'],
+  83:['ADVERTENCIA','co-seguro con importe negativo'],
   71:['ADVERTENCIA','aportejubi > tope máximo ANSES'],72:['ADVERTENCIA','d_svco vacío o cero'],
   73:['ADVERTENCIA','d_ss vacío o cero'],74:['ADVERTENCIA','trasp_osep vacío o cero']
 };
@@ -849,6 +964,8 @@ function sincronizarTopes(){
   D_SS_VAL             = TOPES.D_SS_VAL;
 }
 sincronizarTopes();
+// Respaldo de los valores del código, una sola vez al iniciar
+if(TOPES_FALLBACK===null) TOPES_FALLBACK={...TOPES};
 const ACT_PERM=["1106","2106","1206","2206","1306","2306","1406","2406","9999","1506","2506","0106","0206","0306","0406","01"];
 // ── Insalubridad: actividades con contribución patronal adicional del 2% ──
 const ACT_INSALUBRE=["1506"];
@@ -875,6 +992,10 @@ const fv=(r,c)=>((r&&r[c])||'').toString().trim();
 const fn=(r,c)=>{const v=((r&&r[c])||'').toString().trim();if(v==='')return 0;return parseFloat(v)||0;};
 const r2=n=>Math.round((+n||0)*100)/100;
 const igual=(a,b)=>Math.abs(r2(a)-r2(b))<=TOL;
+// Comparación de mínimos y máximos: se redondea a 2 decimales y se compara
+// exacto, sin tolerancia. Un centavo por debajo del mínimo ya es incumplimiento.
+const menorQue=(v,min)=>r2(v)<r2(min);
+const mayorQue=(v,max)=>r2(v)>r2(max);
 const esNum=s=>{const v=(s||'').trim();if(v===''||v==='0')return true;return/^0*[0-9]{1,12}(\.[0-9]{1,2})?$/.test(v);};
 const fechaOk=s=>{s=String(s||'').trim();if(s.length!==8||!/^\d+$/.test(s))return false;const m=+s.slice(4,6);return m>=1&&m<=12;};
 const estadoPill=s=>s==='ok'?'<span class="pill p-ok">OK</span>':s==='critico'?'<span class="pill p-err">Crítico</span>':'<span class="pill p-warn">Advertencia</span>';
@@ -1017,7 +1138,7 @@ function setStep(n){
 }
 
 function irPaso1(){setStep(1);}
-function irPaso2(){
+async function irPaso2(){
   const campos=[
     ['d-direccion','Dirección'],['d-cargo-auto','Cargo Autoridad'],['d-nombre-auto','Nombre Autoridad'],
     ['d-cargo-rh','Cargo R.H.'],['d-nombre-rh','Nombre R.H.'],['d-periodo','Período']
@@ -1037,6 +1158,38 @@ function irPaso2(){
   }
   document.getElementById('paso1-err').classList.add('hidden');
 
+  // ── Topes del período ──────────────────────────────────────────────
+  // Se cargan ANTES de cualquier cálculo. Si el período no está definido
+  // en la tabla, se corta: calcular con topes de otro mes es un arrastre.
+  const btnP1 = document.getElementById('btn-paso1');
+  if(btnP1){ btnP1.disabled = true; btnP1.textContent = 'Cargando parámetros...'; }
+  try{
+    const fila = await sbCargarTopes(per);
+    if(!fila){
+      aplicarTopesFallback();
+      document.getElementById('paso1-err').classList.remove('hidden');
+      document.getElementById('paso1-err-msg').textContent =
+        `No hay parámetros de cálculo definidos para el período ${per}. Comunicate con la CIA antes de continuar.`;
+      return;
+    }
+    aplicarTopes(fila, per);
+    mostrarToast(`✓ Parámetros del período ${per} cargados`);
+  }catch(e){
+    aplicarTopesFallback();
+    document.getElementById('paso1-err').classList.remove('hidden');
+    document.getElementById('paso1-err-msg').textContent =
+      'No se pudieron obtener los parámetros de cálculo del servidor. Verificá tu conexión y volvé a intentar.';
+    return;
+  }finally{
+    if(btnP1){ btnP1.disabled = false; btnP1.textContent = 'Continuar →'; }
+  }
+
+  // ── Precarga desde el mes anterior ─────────────────────────────────
+  // Se COPIAN: remusueldo, conceptono, canasta_fl, los voluntarios y co-seguros
+  // de OSEP, y todos los datos identificatorios del agente.
+  // Se BLANQUEAN los conceptos que no se repiten mes a mes (SAC, horas extras,
+  // premios, vacaciones y los adicionales de magistrado).
+  // Los importes por porcentaje, mínimos y topes los recalcula recalcularSilencioso().
   // ── Detección de período distinto al del borrador ──────────────────
   // Solo aplica si hay borrador guardado, con período detectado, y distinto al ingresado
   if(borradorAgentes.length > 0 && borradorPeriodo && borradorPeriodo !== per && agentes.length === 0){
@@ -1044,25 +1197,37 @@ function irPaso2(){
       per,
       // Sí → copiar agentes actualizando el período
       function(){
-        agentes = borradorAgentes.map(a => ({ ...a, periodo: per }));
+        agentes = borradorAgentes.map(a => precargarDesdeMesAnterior(a, per));
+        recalcularSilencioso();          // topes y % del período actual
         borradorAgentes = agentes; // sincronizar para que "Continuar borrador" también use el nuevo período
         borradorPeriodo = per;
         document.getElementById('borrador-banner').classList.add('hidden');
         guardarEnSheets();
-        mostrarToast(`✓ ${agentes.length} agentes copiados al período ${per}`);
+        mostrarToast(`✓ ${agentes.length} agentes precargados al período ${per}`);
         setStep(2); mostrarTablaAgentes();
       },
-      // No → descartar borrador y continuar sin agentes
-      async function(){
-        borradorAgentes = [];
-        borradorPeriodo = '';
-        document.getElementById('borrador-banner').classList.add('hidden');
-        await limpiarEnSheets();
-        mostrarToast('🗑 Borrador descartado');
-        setStep(2);
-      },
-      // Ignorar → continuar sin tocar nada (el banner de borrador sigue visible)
+      // No → descartar borrador y continuar sin agentes (pide confirmación:
+      // esto borra la fila de la base y no se puede recuperar)
       function(){
+        confirmarAccion(
+          '¿Descartar el borrador?',
+          `Se eliminarán definitivamente los ${borradorAgentes.length} agentes guardados del período ${borradorPeriodo}. Esta acción no se puede deshacer.`,
+          async function(){
+            borradorAgentes = [];
+            borradorPeriodo = '';
+            document.getElementById('borrador-banner').classList.add('hidden');
+            const tb=document.getElementById('agentes-tbody');if(tb)tb.innerHTML='';
+            await limpiarEnSheets();
+            mostrarToast('🗑 Borrador descartado');
+            setStep(2);
+          },
+          'Sí, descartar');
+      },
+      // Ignorar → continuar sin tocar nada: el borrador queda guardado y el
+      // banner sigue visible para poder retomarlo.
+      function(){
+        const tb=document.getElementById('agentes-tbody');if(tb)tb.innerHTML='';
+        mostrarToast('El borrador quedó guardado: podés retomarlo con "Continuar borrador"');
         setStep(2);
       }
     );
@@ -1087,7 +1252,11 @@ function confirmarAccion(titulo,mensaje,callbackSi,labelSi='Confirmar'){
 }
 
 function limpiarAgentes(){
-  agentes=[];csvErrores=[];totales={};csvFile=null;
+  agentes=[];csvErrores=[];totales={};csvFile=null;agenteIdx=null;
+  // Vaciar la tabla: si quedan filas viejas en el DOM, se pueden clickear
+  // y no corresponden a ningún agente en memoria.
+  const tb0=document.getElementById('agentes-tbody');if(tb0)tb0.innerHTML='';
+  cerrarPanel();
   const viejo=document.getElementById('fi-csv');
   if(viejo){
     const nuevo=document.createElement('input');
@@ -1200,7 +1369,7 @@ function importarCSV(text,nombre){
         <span class="ai">✕</span>
         <div>
           <strong>${conComas.length} agente(s) tienen comas (,) en Apellido/Nombre o Domicilio.</strong><br>
-          Las comas rompen el formato CSV y deben eliminarse antes de enviar.<br>
+          Las comas rompen el formato CSV y deben eliminarse antes de descargar.<br>
           <div style="margin-top:6px;border:1px solid var(--red-border);border-radius:5px;max-height:120px;overflow-y:auto;background:#fff">
             ${conComas.map(a=>`
               <div style="padding:4px 8px;border-bottom:1px solid #fdd;font-size:10px">
@@ -1215,9 +1384,22 @@ function importarCSV(text,nombre){
 
   // Detectar período original del CSV para mostrar aviso informativo
   const _periodoCSV=(()=>{const idx=COLS.indexOf('periodo');if(idx<0)return'';for(const l of lines){const v=normalizarPeriodo((parsearLineaCSV(l)[idx]||'').trim());if(v&&v!==periodoFormulario)return v;}return'';})();
-  const avisoperiodo = _periodoCSV && periodoFormulario
-    ? `<div class="alert a-info" style="margin-top:6px;font-size:11px"><span class="ai">\u2139</span>El CSV ten\u00eda per\u00edodo <strong>${_periodoCSV}</strong> \u2014 se actualiz\u00f3 autom\u00e1ticamente a <strong>${periodoFormulario}</strong>.</div>`
-    : '';
+  // ── Precarga: el CSV es de otro período ────────────────────────────
+  // Si el archivo es de un mes anterior, se blanquean los conceptos que no se
+  // repiten mes a mes (SAC, horas extras, premios, vacaciones y adicionales),
+  // igual que en la precarga desde el borrador. El resto se conserva y los
+  // importes por porcentaje los recalcula recalcularSilencioso() más abajo.
+  const esPrecargaCSV = !!(_periodoCSV && periodoFormulario && _periodoCSV !== periodoFormulario);
+  if(esPrecargaCSV){
+    nuevos.forEach(r=>{ CAMPOS_NO_ARRASTRAR.forEach(c=>{ r[c]='0'; }); });
+  }
+
+  const avisoperiodo = !esPrecargaCSV ? '' :
+    `<div class="alert a-warn" style="margin-top:6px;font-size:11px"><span class="ai">\u26a0</span>
+      <div>El CSV es del per\u00edodo <strong>${_periodoCSV}</strong> y se carg\u00f3 como precarga de <strong>${periodoFormulario}</strong>.<br>
+      Se conservaron sueldo b\u00e1sico, conceptos no remunerativos, canasta, aportes voluntarios y co-seguros.<br>
+      Se pusieron en <strong>cero</strong>: SAC, horas extras, premios, vacaciones y adicionales. Cargalos si corresponden a este per\u00edodo.</div>
+    </div>`;
 
   const totalAntes = agentes.length;
   agentes = [...agentes, ...nuevos]; // ACUMULAR en lugar de reemplazar
@@ -1247,6 +1429,16 @@ function mostrarTablaAgentes(){
 }
 
 // ── RECALCULAR TODOS LOS AGENTES ──────────────────────────────────────
+// Campos que NO se arrastran de un mes al otro: se blanquean en la precarga.
+const CAMPOS_NO_ARRASTRAR=['remusac','hsextras','cant_hsext','premios','vacaciones',
+  'remu_doc','ap_dcto788','aporte_dif'];
+
+function precargarDesdeMesAnterior(a, per){
+  const n={...a, periodo: per};
+  CAMPOS_NO_ARRASTRAR.forEach(c=>{ n[c]='0'; });
+  return n;
+}
+
 function recalcularSilencioso(){
   if(!agentes.length) return;
   _doRecalcular();
@@ -1256,7 +1448,7 @@ function recalcularTodos(){
   if(!agentes.length) return;
   confirmarAccion(
     'Recalcular aportes',
-    `Se recalcularán los aportes y contribuciones de ${agentes.length} agente(s) usando los parámetros actuales. Las remuneraciones no se modifican.`,
+    `Se recalcularán los aportes y contribuciones de ${agentes.length} agente(s) usando los parámetros actuales. No se modifican las remuneraciones, ni el aporte voluntario, ni el fondo de trasplante voluntario, ni los co-seguros.`,
     function(){
       _doRecalcular();
       renderTabla();
@@ -1292,6 +1484,9 @@ function actualizarBannerRetiro(cod){
   }
 }
 
+// NOTA: apo_vol, tras_vol y los co-seguros (coseguro, cos_pro, cos_alt, cos_int)
+// NUNCA se recalculan: se toman siempre tal como vienen del CSV o como los editó el usuario.
+// Si están por debajo del mínimo o no respetan el %, se avisa en la validación (Paso 3).
 function _doRecalcular(){
   agentes.forEach(a => {
     const remusueldo = fn(a,'remusueldo'), remusac = fn(a,'remusac'), hsextras = fn(a,'hsextras');
@@ -1315,16 +1510,12 @@ function _doRecalcular(){
     const esOSPLAD = codobra === '001102';
     let pctAporte = 0.045, pctContrib = 0.09;
     let minAporte = OSEP_APORTE_MIN, minContrib = OSEP_CONTRIB_MIN;
-    if(esOSPLAD){ if(isDoc){ pctAporte=0.03; pctContrib=0.06; } minAporte=0; minContrib=0; }
+    // OSPLAD (001102): 3% aporte y 6% contribución para todos, sin mínimos y sin fondo de trasplante.
+    if(esOSPLAD){ pctAporte=0.03; pctContrib=0.06; minAporte=0; minContrib=0; }
     const apafilos = minAporte > 0 ? Math.max(r2(baseOS*pctAporte),minAporte) : r2(baseOS*pctAporte);
     const appatros = minContrib > 0 ? Math.max(r2(baseOS*pctContrib),minContrib) : r2(baseOS*pctContrib);
-    let trasp_osep=0, apo_vol=0, tras_vol=0;
-    if(esOSEP){
-      trasp_osep = Math.max(r2(remuimpoos*0.005), OSEP_TRASP_MIN);
-      const pct  = cantAdh>=2?0.05:cantAdh>=1?0.025:0;
-      apo_vol    = cantAdh>0?Math.max(r2(remuimpoos*pct),r2(OSEP_BASE_MIN*pct)):0;
-      tras_vol   = cantAdh>0?trasp_osep:0;
-    }
+    let trasp_osep=0;
+    if(esOSEP) trasp_osep = Math.max(r2(remuimpoos*0.005), OSEP_TRASP_MIN);
     const aporte_caj = adCaja==='T'?r2(baseOS*CAJA_APORTE_PCT):0;
     const contrib_ca = adCaja==='T'?r2(baseOS*CAJA_CONTRIB_PCT):0;
     const deuda_caja = tieneDeud==='T'?r2(baseOS*CAJA_DEUDA_PCT):fn(a,'deuda_caja');
@@ -1332,7 +1523,7 @@ function _doRecalcular(){
       remuimpo:String(remuimpo),remutotal:String(remutotal),remuimpoos:String(remuimpoos),
       remuimpoto:String(remuimpo),aportejubi:String(aportejubi),aportepatr:String(aportepatr),
       apafilos:String(apafilos),appatros:String(appatros),trasp_osep:String(trasp_osep),
-      apo_vol:String(apo_vol),tras_vol:String(tras_vol),aporte_caj:String(aporte_caj),
+      aporte_caj:String(aporte_caj),
       contrib_ca:String(contrib_ca),deuda_caja:String(deuda_caja),
     });
   });
@@ -1386,7 +1577,12 @@ function abrirNuevoAgente(){
 }
 
 function abrirAgente(idx){
-  if(idx<0||idx>=agentes.length)return;
+  if(idx<0||idx>=agentes.length){
+    // Desfase entre la tabla en pantalla y los agentes en memoria
+    mostrarToast('✕ Ese agente ya no está cargado. Volvé a importar el CSV o recuperá el borrador.');
+    const tb=document.getElementById('agentes-tbody');if(tb&&agentes.length===0)tb.innerHTML='';
+    return;
+  }
   agenteIdx=idx;dpTabActual='personales';
   const a=agentes[idx];
   document.getElementById('dp-nombre').textContent=fv(a,'apeynom')||'Nuevo agente';
@@ -1630,7 +1826,7 @@ function htmlOS(a){
   const remutotal=fn(a,'remutotal');const remuimpoos=fn(a,'remuimpoos')||remutotal;
   const cantAdh=parseInt(fv(a,'adherente'))||0;
   let pctAporte=0.045,pctContrib=0.09,minAporte=OSEP_APORTE_MIN,minContrib=OSEP_CONTRIB_MIN,etiquetaOS='OSEP';
-  if(esOSPLAD){etiquetaOS='OSPLAD';if(isDoc){pctAporte=0.03;pctContrib=0.06;}else{pctAporte=0.045;pctContrib=0.09;}minAporte=0;minContrib=0;}
+  if(esOSPLAD){etiquetaOS='OSPLAD';pctAporte=0.03;pctContrib=0.06;minAporte=0;minContrib=0;}
   const apafilos=minAporte>0?Math.max(r2(remutotal*pctAporte),minAporte):r2(remutotal*pctAporte);
   const appatros=minContrib>0?Math.max(r2(remutotal*pctContrib),minContrib):r2(remutotal*pctContrib);
   const pct=cantAdh>=2?0.05:cantAdh>=1?0.025:0;
@@ -1640,7 +1836,7 @@ function htmlOS(a){
   <div class="field-group">
     <div class="field-group-title">Obra Social</div>
     ${dpSelect('o-codobra','Obra Social *',fv(a,'codobra'),[['009960','009960 — OSEP (Provincial)'],['001102','001102 — OSPLAD (Nacional)']])}
-    ${esOSPLAD&&isDoc?`<div class="alert a-info" style="margin-top:8px"><span class="ai">ℹ</span>Docente OSPLAD: aporte 3%, contribución 6%</div>`:''}
+    ${esOSPLAD?`<div class="alert a-info" style="margin-top:8px"><span class="ai">ℹ</span>OSPLAD: aporte 3%, contribución 6%, sin mínimos. No lleva fondo de trasplante, aportes voluntarios ni co-seguros.</div>`:''}
     <div class="g2" style="margin-top:10px">
       ${dpRO(`Aporte O.S. (${(pctAporte*100).toFixed(0)}%)`,apafilos)}
       ${dpRO(`Contribución Patr. O.S. (${(pctContrib*100).toFixed(0)}%)`,appatros)}
@@ -1648,10 +1844,10 @@ function htmlOS(a){
   </div>
   <div class="field-group" ${esOSEP?'':' style="display:none"'} id="os-vol-sec">
     <div class="field-group-title">Afiliados voluntarios OSEP</div>
-    <p style="font-size:11px;color:var(--text2);margin-bottom:8px">Adherentes: <strong>${cantAdh}</strong> · Porcentaje: <strong>${pct*100}%</strong> <span class="calc-badge">editables si difieren</span></p>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:8px">Valores tomados del CSV, no se recalculan. Referencia según tramo — aporte 2.5%: <strong>${Math.max(r2(remuimpoos*0.025),r2(OSEP_BASE_MIN*0.025)).toFixed(2)}</strong> · 5%: <strong>${Math.max(r2(remuimpoos*0.05),r2(OSEP_BASE_MIN*0.05)).toFixed(2)}</strong> · fondo trasp. voluntario: <strong>${trasp_osep.toFixed(2)}</strong></p>
     <div class="g3">
-      ${dpCampo('o-apo_vol',`Aporte voluntario (${pct*100}%)`,fv(a,'apo_vol')||String(apo_vol),'number')}
-      ${dpCampo('o-tras_vol','Fondo trasplante voluntario (0.5%)',fv(a,'tras_vol')||String(tras_vol),'number')}
+      ${dpCampo('o-apo_vol','Aporte voluntario (2.5% o 5%)',fv(a,'apo_vol'),'number')}
+      ${dpCampo('o-tras_vol','Fondo trasplante voluntario (0.5%)',fv(a,'tras_vol'),'number')}
       ${dpRO('Fondo trasplante OSEP (0.5%)',trasp_osep)}
     </div>
   </div>
@@ -1829,12 +2025,10 @@ function guardarAgente(){
     const appatros=fn(a,'appatros')||0;
     a.codobra=codobra;a.apafilos=String(apafilos);a.appatros=String(appatros);
     if(codobra==='009960'){
-      const pct=cantAdh>=2?0.05:cantAdh>=1?0.025:0;
-      const apo_vol=cantAdh>0?Math.max(r2(remuimpoos*pct),r2(OSEP_BASE_MIN*pct)):0;
-      const trasp_osep=Math.max(r2(remuimpoos*0.005),OSEP_TRASP_MIN);const tras_vol=cantAdh>0?trasp_osep:0;
-      // Usar valor editado si existe, sino el calculado
-      a.apo_vol=String(gv('o-apo_vol')||apo_vol);
-      a.tras_vol=String(gv('o-tras_vol')||tras_vol);
+      const trasp_osep=Math.max(r2(remuimpoos*0.005),OSEP_TRASP_MIN);
+      // Los voluntarios se toman tal cual: del CSV o de lo que cargó el usuario. No se calculan.
+      a.apo_vol=gv('o-apo_vol');
+      a.tras_vol=gv('o-tras_vol');
       a.trasp_osep=String(trasp_osep);
       a.cos_pro=gv('o-cos_pro');a.cos_alt=gv('o-cos_alt');a.cos_int=gv('o-cos_int');
     } else {a.apo_vol='0';a.tras_vol='0';a.trasp_osep='0';a.cos_pro='0';a.cos_alt='0';a.cos_int='0';}
@@ -1917,20 +2111,45 @@ function procesarValidaciones(){
     if(!esRetiro && !igual(remuimpoos,remutotal))ag(30);
     const aportejubi=fn(a,'aportejubi');
     if(esMag){if(!igual(aportejubi,r2(remuimpo*0.18)))ag(53);}
-    else{if(!igual(aportejubi,Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX)))ag(53);if(dias===30&&aportejubi<ANSES_APORTE_MIN-TOL)ag(18);if(aportejubi>ANSES_APORTE_MAX+TOL)ag(71);}
+    else{if(!igual(aportejubi,Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX)))ag(53);if(dias===30&&menorQue(aportejubi,ANSES_APORTE_MIN))ag(18);if(mayorQue(aportejubi,ANSES_APORTE_MAX))ag(71);}
     if(!igual(fn(a,'aportepatr'),r2(remuimpo*pctContribDe(fv(a,'actividad')))))ag(52);
-    if(dias===30&&fn(a,'aportepatr')<ANSES_CONTRIB_MIN-TOL)ag(75);
-    if(fn(a,'apafilos')<OSEP_APORTE_MIN-TOL)ag(65);if(fn(a,'appatros')<OSEP_CONTRIB_MIN-TOL)ag(66);
-    if(fv(a,'codobra')==='009960'){const t=fn(a,'trasp_osep');if(t===0)ag(74);else if(t<OSEP_TRASP_MIN-TOL)ag(67);}
+    if(dias===30&&menorQue(fn(a,'aportepatr'),ANSES_CONTRIB_MIN))ag(75);
+    // Los mínimos de aporte y contribución son sólo de OSEP: OSPLAD no tiene piso.
+    if(fv(a,'codobra')==='009960'){
+      if(menorQue(fn(a,'apafilos'),OSEP_APORTE_MIN))ag(65);
+      if(menorQue(fn(a,'appatros'),OSEP_CONTRIB_MIN))ag(66);
+    }
+    if(fv(a,'codobra')==='009960'){const t=fn(a,'trasp_osep');if(t===0)ag(74);else if(menorQue(t,OSEP_TRASP_MIN))ag(67);}
+    // ── Voluntarios OSEP: se toman del CSV. No se usa la cantidad de adherentes:
+    // el tramo (2.5% o 5%) se deduce del importe declarado y sólo se avisa si no cierra. ──
+    if(fv(a,'codobra')==='009960'){
+      const apoV=fn(a,'apo_vol'), trasV=fn(a,'tras_vol');
+      if(apoV>0){
+        // Importe esperado para cada tramo: % sobre la remuneración, con piso de base mínima × %
+        const esp25=Math.max(r2(remuimpoos*0.025),r2(OSEP_BASE_MIN*0.025));
+        const esp50=Math.max(r2(remuimpoos*0.05), r2(OSEP_BASE_MIN*0.05));
+        const min25=r2(OSEP_BASE_MIN*0.025);
+        if(menorQue(apoV,min25))ag(79);                            // por debajo del mínimo más bajo
+        else if(!igual(apoV,esp25)&&!igual(apoV,esp50))ag(68);      // no coincide con ningún tramo
+        const trasEsp=Math.max(r2(remuimpoos*0.005),OSEP_TRASP_MIN);
+        if(trasV===0)ag(69);
+        else if(menorQue(trasV,OSEP_TRASP_MIN))ag(80);
+        else if(!igual(trasV,trasEsp))ag(70);
+      } else if(trasV>0){
+        if(menorQue(trasV,OSEP_TRASP_MIN))ag(80);
+        else if(!igual(trasV,Math.max(r2(remuimpoos*0.005),OSEP_TRASP_MIN)))ag(70);
+      }
+      ['coseguro','cos_pro','cos_alt','cos_int'].forEach(cc=>{if(fn(a,cc)<0)ag(83);});
+    }
     if(!fv(a,'d_svco')||fn(a,'d_svco')===0)ag(72);else if(!igual(fn(a,'d_svco'),D_SVCO_VAL))ag(54);
     if(!fv(a,'d_ss')||fn(a,'d_ss')===0)ag(73);else if(!igual(fn(a,'d_ss'),D_SS_VAL))ag(55);
     if(fv(a,'ad_caja_co')==='T'){
       const baseCaja=esRetiro?remuimpoos:remutotal;
       if(!igual(fn(a,'aporte_caj'),r2(baseCaja*CAJA_APORTE_PCT)))ag(24);
       if(!igual(fn(a,'contrib_ca'),r2(baseCaja*CAJA_CONTRIB_PCT)))ag(25);
-      if(fn(a,'aporte_caj')<CAJA_APORTE_MIN-TOL)ag(76);
-      if(CAJA_SUELDO_GOB>0&&fn(a,'aporte_caj')>r2(CAJA_SUELDO_GOB*CAJA_APORTE_PCT)+TOL)ag(77);
-      if(CAJA_SUELDO_GOB>0&&fn(a,'contrib_ca')>r2(CAJA_SUELDO_GOB*CAJA_CONTRIB_PCT)+TOL)ag(78);
+      if(menorQue(fn(a,'aporte_caj'),CAJA_APORTE_MIN))ag(76);
+      if(CAJA_SUELDO_GOB>0&&mayorQue(fn(a,'aporte_caj'),r2(CAJA_SUELDO_GOB*CAJA_APORTE_PCT)))ag(77);
+      if(CAJA_SUELDO_GOB>0&&mayorQue(fn(a,'contrib_ca'),r2(CAJA_SUELDO_GOB*CAJA_CONTRIB_PCT)))ag(78);
     }
     if(orgData){const codCSV=parseInt(fv(a,'codigo'))||0;if(codCSV!==0&&codCSV!==orgData.c)ag(48);}
   });
@@ -2173,8 +2392,8 @@ function generarCSVString(){
 function renderConfirmacion(){
   const c=campos();const criticos=csvErrores.filter(e=>e.sev==='CRÍTICO').length;const adv=csvErrores.filter(e=>e.sev==='ADVERTENCIA').length;
   document.getElementById('paso5-content').innerHTML=`
-    <div class="ct">Confirmar envío</div>
-    <div class="cs">Al confirmar se descargará el CSV y la DDJJ en PDF, y se enviará un email a la CIA. El borrador guardado se eliminará.</div>
+    <div class="ct">Confirmar descarga</div>
+    <div class="cs">Al confirmar se descargará el CSV y la DDJJ en PDF. El borrador guardado se eliminará.</div>
     <div class="alert a-info"><span class="ai">ℹ</span><div>
       <strong>${c.org}</strong> — Período <strong>${c.per}</strong> — Tipo: ${c.tipo==='0'?'Original':'Rectificativa '+c.tipo}<br>
       Responsable: ${c.nombreRH} · Agentes: ${agentes.length} · Errores críticos: <strong>${criticos}</strong> · Advertencias: <strong>${adv}</strong>
@@ -2182,7 +2401,7 @@ function renderConfirmacion(){
     <div id="email-status"></div>
     <div id="confirm-btnrow" class="btn-row">
       <button class="btn-sm" onclick="irPaso4()">← Revisar DDJJ</button>
-      <button class="btn-primary" id="btn-confirmar" onclick="confirmarEnvio()">✓ Confirmar y enviar</button>
+      <button class="btn-primary" id="btn-confirmar" onclick="confirmarEnvio()">✓ Confirmar y descargar</button>
     </div>`;
 }
 
@@ -2208,7 +2427,7 @@ async function confirmarEnvio(){
 
   let emailOk=false;
   try{
-    if(st)st.innerHTML='<div class="alert a-info"><span class="ai">ℹ</span>Enviando email...</div>';
+    if(st)st.innerHTML='<div class="alert a-info"><span class="ai">ℹ</span>Finalizando...</div>';
     await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{
       organismo:c.org,periodo:c.per,responsable:c.nombreRH,agentes:String(agentes.length),
       criticos:String(criticos),advertencias:String(adv),estado:estado.toUpperCase(),
@@ -2216,9 +2435,9 @@ async function confirmarEnvio(){
       mensaje:`Organismo: ${c.org} | Periodo: ${c.per} | Responsable: ${c.nombreRH} | Agentes: ${agentes.length}`,
     });
     emailOk=true;
-    if(st)st.innerHTML=`<div class="alert a-ok"><span class="ai">✓</span>Archivos generados correctamente. Por favor, envielos a ${EMAIL_DESTINO}</div>`;
+    if(st)st.innerHTML=`<div class="alert a-ok"><span class="ai">✓</span>Archivos generados correctamente.</div>`;
   }catch(e){
-    if(st)st.innerHTML=`<div class="alert a-warn"><span class="ai">⚠</span>Email no enviado. Los archivos se descargaron localmente.</div>`;
+    if(st)st.innerHTML=`<div class="alert a-ok"><span class="ai">✓</span>Archivos descargados localmente.</div>`;
   }
 
   // Limpiar borrador en Sheets al confirmar envío
@@ -2236,14 +2455,14 @@ async function confirmarEnvio(){
   const contenido=document.getElementById('paso5-content');
   if(contenido){
     contenido.innerHTML=`
-      <div class="ct">Envío completado</div>
+      <div class="ct">Descarga completada</div>
       <div style="margin-bottom:10px">${emailStatusHTML}</div>
       <div class="alert a-ok"><span class="ai">✓</span><div>
-        <strong>Envío registrado — ${c.org} — Período ${c.per}</strong><br>
+        <strong>Descarga registrada — ${c.org} — Período ${c.per}</strong><br>
         ${ahora.toLocaleString('es-AR')} · CSV${pdfBlob?' y DDJJ PDF':''} descargado(s).
       </div></div>
       <div class="btn-row">
-        <button class="btn-sm btn-primary" onclick="nuevoEnvio()">Nuevo envío</button>
+        <button class="btn-sm btn-primary" onclick="nuevoEnvio()">Nueva descarga</button>
       </div>`;
   }
   mostrarAvisoEnviar();
@@ -2269,14 +2488,13 @@ function nuevoEnvio(){
 function renderHist(){
   const mis=envios.filter(e=>e.organismo===currentOrg);
   const t=document.getElementById('hist-table');
-  if(!mis.length){t.innerHTML='<p style="font-size:11px;color:var(--text2)">Sin envíos aún.</p>';return;}
-  t.innerHTML=`<table><thead><tr><th>Período</th><th>Tipo</th><th>Responsable</th><th>Agentes</th><th>Crít.</th><th>Adv.</th><th>Fecha/Hora</th><th>Email</th><th>Estado</th></tr></thead><tbody>
+  if(!mis.length){t.innerHTML='<p style="font-size:11px;color:var(--text2)">Sin descargas aún.</p>';return;}
+  t.innerHTML=`<table><thead><tr><th>Período</th><th>Tipo</th><th>Responsable</th><th>Agentes</th><th>Crít.</th><th>Adv.</th><th>Fecha/Hora</th><th>Estado</th></tr></thead><tbody>
   ${mis.map(e=>`<tr><td>${e.periodo}</td><td>${e.tipo}</td><td>${e.responsable}</td>
     <td style="text-align:center">${e.agentes}</td>
     <td style="text-align:center;color:var(--red);font-weight:600">${e.criticos}</td>
     <td style="text-align:center;color:var(--amber)">${e.advertencias}</td>
     <td>${e.fecha} ${e.hora}</td>
-    <td>${e.emailOk?'<span class="pill p-ok">✓</span>':'<span class="pill p-warn">—</span>'}</td>
     <td>${estadoPill(e.estado)}</td></tr>`).join('')}</tbody></table>`;
 }
 
@@ -2287,7 +2505,7 @@ function refreshAdmin(){
   document.getElementById('m-warn').textContent=envios.filter(e=>e.estado==='advertencia').length;
   document.getElementById('m-crit').textContent=envios.filter(e=>e.estado==='critico').length;
   const ar=document.getElementById('a-recent');
-  if(!envios.length){ar.innerHTML='<p style="font-size:11px;color:var(--text2)">Sin envíos.</p>';return;}
+  if(!envios.length){ar.innerHTML='<p style="font-size:11px;color:var(--text2)">Sin descargas.</p>';return;}
   ar.innerHTML=`<table><thead><tr><th>Organismo</th><th>Período</th><th>Responsable</th><th>Agentes</th><th>Crít.</th><th>Adv.</th><th>Fecha/Hora</th><th>Estado</th></tr></thead><tbody>
   ${envios.slice(0,10).map(e=>`<tr><td>${e.organismo}</td><td>${e.periodo}</td><td>${e.responsable}</td><td style="text-align:center">${e.agentes}</td><td style="text-align:center;color:var(--red)">${e.criticos}</td><td style="text-align:center;color:var(--amber)">${e.advertencias}</td><td>${e.fecha} ${e.hora}</td><td>${estadoPill(e.estado)}</td></tr>`).join('')}</tbody></table>`;
 }
@@ -2296,16 +2514,16 @@ function renderAdminAll(){
   const f=(document.getElementById('filtro-org').value||'').toLowerCase();
   const lista=envios.filter(e=>e.organismo.toLowerCase().includes(f));
   const el=document.getElementById('a-all');
-  if(!lista.length){el.innerHTML='<p style="font-size:11px;color:var(--text2)">Sin envíos.</p>';return;}
-  el.innerHTML=`<table><thead><tr><th>Organismo</th><th>Período</th><th>Tipo</th><th>Responsable</th><th>Agentes</th><th>Crít.</th><th>Adv.</th><th>Fecha/Hora</th><th>Email</th><th>Estado</th></tr></thead><tbody>
-  ${lista.map(e=>`<tr><td>${e.organismo}</td><td>${e.periodo}</td><td>${e.tipo}</td><td>${e.responsable}</td><td style="text-align:center">${e.agentes}</td><td style="text-align:center;color:var(--red)">${e.criticos}</td><td style="text-align:center;color:var(--amber)">${e.advertencias}</td><td>${e.fecha} ${e.hora}</td><td>${e.emailOk?'✓':'—'}</td><td>${estadoPill(e.estado)}</td></tr>`).join('')}</tbody></table>`;
+  if(!lista.length){el.innerHTML='<p style="font-size:11px;color:var(--text2)">Sin descargas.</p>';return;}
+  el.innerHTML=`<table><thead><tr><th>Organismo</th><th>Período</th><th>Tipo</th><th>Responsable</th><th>Agentes</th><th>Crít.</th><th>Adv.</th><th>Fecha/Hora</th><th>Estado</th></tr></thead><tbody>
+  ${lista.map(e=>`<tr><td>${e.organismo}</td><td>${e.periodo}</td><td>${e.tipo}</td><td>${e.responsable}</td><td style="text-align:center">${e.agentes}</td><td style="text-align:center;color:var(--red)">${e.criticos}</td><td style="text-align:center;color:var(--amber)">${e.advertencias}</td><td>${e.fecha} ${e.hora}</td><td>${estadoPill(e.estado)}</td></tr>`).join('')}</tbody></table>`;
 }
 
 function renderAdminOrgs(){
   const f=(document.getElementById('filtro-admin-org')||{value:''}).value.toLowerCase();
   const lista=orgsActivos.filter(o=>o.n.toLowerCase().includes(f)||String(o.c).includes(f));
   const el=document.getElementById('a-orgs');if(!el)return;
-  el.innerHTML=`<table><thead><tr><th>Código</th><th>Organismo</th><th>Clave</th><th>Envíos</th><th>Último envío</th><th style="width:80px"></th></tr></thead>
+  el.innerHTML=`<table><thead><tr><th>Código</th><th>Organismo</th><th>Clave</th><th>Descargas</th><th>Última descarga</th><th style="width:80px"></th></tr></thead>
     <tbody>${lista.map(o=>{
       const mis=envios.filter(e=>e.organismo===o.n).length;const ult=envios.find(e=>e.organismo===o.n);
       return`<tr><td style="font-family:var(--mono)">${pad(o.c)}</td><td style="font-weight:500">${o.n}</td>
@@ -2372,11 +2590,11 @@ function actualizarSelectOrg(){
 }
 
 function exportarRegistroCSV(){
-  if(!envios.length){alert('Sin envíos para exportar.');return;}
-  const h='Organismo,Período,Tipo,Responsable,Agentes,Críticos,Advertencias,Fecha,Hora,Email,Estado';
-  const rows=envios.map(e=>`${e.organismo},${e.periodo},${e.tipo},${e.responsable},${e.agentes},${e.criticos},${e.advertencias},${e.fecha},${e.hora},${e.emailOk?'Sí':'No'},${e.estado}`);
+  if(!envios.length){alert('Sin descargas para exportar.');return;}
+  const h='Organismo,Período,Tipo,Responsable,Agentes,Críticos,Advertencias,Fecha,Hora,Estado';
+  const rows=envios.map(e=>`${e.organismo},${e.periodo},${e.tipo},${e.responsable},${e.agentes},${e.criticos},${e.advertencias},${e.fecha},${e.hora},${e.estado}`);
   const blob=new Blob([[h,...rows].join('\n')],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='registro_envios_csb.csv';a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='registro_descargas_csb.csv';a.click();
 }
 
 function adminTab(tab){
@@ -2387,10 +2605,66 @@ function adminTab(tab){
   if(tab==='envios')renderAdminAll();
   if(tab==='organismos')renderAdminOrgs();
   if(tab==='resumen')refreshAdmin();
-  if(tab==='parametros')cargarCamposParametros();
+  if(tab==='parametros')abrirPanelParametros();
+}
+
+function pmMsg(tipo, texto){
+  ['ok','err','info'].forEach(t=>document.getElementById('param-'+t).classList.add('hidden'));
+  if(!tipo) return;
+  document.getElementById('param-'+tipo+'-msg').textContent = texto;
+  document.getElementById('param-'+tipo).classList.remove('hidden');
+}
+
+// Período por defecto del panel: el de los topes cargados, o el mes en curso
+function periodoActualSugerido(){
+  if(topesPeriodo) return topesPeriodo;
+  const d=new Date();
+  return String(d.getFullYear())+String(d.getMonth()+1).padStart(2,'0');
+}
+
+// Trae del servidor los topes del período escrito en el panel
+async function cargarTopesPeriodo(){
+  const per=(document.getElementById('pm-periodo').value||'').trim();
+  if(per.length!==6){ pmMsg('err','El período debe tener formato AAAAMM (ej: 202507)'); return; }
+  pmMsg('info','Consultando el servidor...');
+  try{
+    const fila=await sbCargarTopes(per);
+    if(!fila){
+      aplicarTopesFallback();
+      cargarCamposParametros();
+      pmMsg('info',`El período ${per} todavía no tiene parámetros. Los valores en pantalla son los del código, no del servidor: revisalos antes de guardar.`);
+      return;
+    }
+    aplicarTopes(fila, per);
+    cargarCamposParametros();
+    pmMsg('ok',`Parámetros del período ${per} cargados desde el servidor.`);
+  }catch(e){
+    pmMsg('err','No se pudo consultar el servidor: '+e.message);
+  }
+}
+
+// Al abrir la pestaña Parámetros: se consulta SIEMPRE el servidor, para no
+// mostrar (ni guardar por error) los valores del código.
+async function abrirPanelParametros(){
+  const inp=document.getElementById('pm-periodo');
+  if(inp && !inp.value) inp.value = periodoActualSugerido();
+  cargarCamposParametros();          // pintar algo mientras responde el servidor
+  await cargarTopesPeriodo();        // y reemplazar por lo que hay en la base
+}
+
+// El tope máximo de la Caja es el 3% del sueldo del gobernador: se muestra
+// calculado en vivo mientras se edita el campo, no se ingresa a mano.
+function actualizarTopeCaja(){
+  const inp=document.getElementById('pm-caja-gob');
+  const lbl=document.getElementById('pm-caja-max-lbl');
+  if(!inp||!lbl)return;
+  const gob=parseFloat(inp.value)||0;
+  lbl.textContent='Tope máx: '+(gob>0?'$'+fmt(r2(gob*0.03)):'—');
 }
 
 function cargarCamposParametros(){
+  const inpPer=document.getElementById('pm-periodo');
+  if(inpPer && !inpPer.value) inpPer.value = periodoActualSugerido();
   document.getElementById('pm-anses-base-max').value    = TOPES.ANSES_BASE_MAX;
   document.getElementById('pm-anses-aporte-min').value  = TOPES.ANSES_APORTE_MIN;
   document.getElementById('pm-anses-aporte-max').value  = TOPES.ANSES_APORTE_MAX;
@@ -2403,14 +2677,12 @@ function cargarCamposParametros(){
   document.getElementById('pm-osep-base-min').value     = TOPES.OSEP_BASE_MIN;
   document.getElementById('pm-caja-min').value          = TOPES.CAJA_APORTE_MIN;
   document.getElementById('pm-caja-gob').value          = TOPES.CAJA_SUELDO_GOB;
-  const cajaTope = TOPES.CAJA_SUELDO_GOB > 0 ? fmt(TOPES.CAJA_SUELDO_GOB * 0.03) : '—';
-  const lblCaja = document.getElementById('pm-caja-max-lbl');
-  if(lblCaja) lblCaja.textContent = 'Tope máx: $' + cajaTope;
+  actualizarTopeCaja();
   document.getElementById('pm-svco').value              = TOPES.D_SVCO_VAL;
   document.getElementById('pm-ss').value                = TOPES.D_SS_VAL;
 }
 
-function guardarParametros(){
+async function guardarParametros(){
   const gn = id => parseFloat(document.getElementById(id).value)||0;
   TOPES.ANSES_APORTE_MIN      = gn('pm-anses-aporte-min');
   TOPES.ANSES_BASE_MAX        = gn('pm-anses-base-max');
@@ -2427,10 +2699,24 @@ function guardarParametros(){
   TOPES.D_SVCO_VAL            = gn('pm-svco');
   TOPES.D_SS_VAL              = gn('pm-ss');
   sincronizarTopes(); // actualizar alias globales
-  const ok = document.getElementById('param-ok');
-  ok.classList.remove('hidden');
-  setTimeout(()=>ok.classList.add('hidden'), 3000);
-  mostrarToast('✓ Parámetros actualizados');
+
+  const per=(document.getElementById('pm-periodo').value||'').trim();
+  if(per.length!==6){ pmMsg('err','Indicá el período (AAAAMM) al que corresponden estos valores.'); return; }
+
+  // Si se va a sobreescribir un período existente, pedir confirmación
+  if(topesOrigen==='servidor' && topesPeriodo===per){
+    if(!confirm(`Vas a sobreescribir los parámetros del período ${per}. ¿Confirmás?`)) { pmMsg(null); return; }
+  }
+
+  pmMsg('info','Guardando en el servidor...');
+  try{
+    await sbGuardarTopes(per, TOPES);
+    topesPeriodo=per; topesOrigen='servidor';
+    pmMsg('ok',`Parámetros del período ${per} guardados. Los organismos los van a usar al declarar ese período.`);
+    mostrarToast('✓ Parámetros guardados');
+  }catch(e){
+    pmMsg('err','No se pudieron guardar en el servidor: '+e.message+'. Los valores quedaron aplicados solo en esta sesión.');
+  }
 }
 
 init();
