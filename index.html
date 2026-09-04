@@ -1502,10 +1502,18 @@ function _doRecalcular(){
     const adCaja  = fv(a,'ad_caja_co');
     const tieneDeud = fv(a,'tiene_deud');
     const codobra = fv(a,'codobra');
-    const aportejubi = isDoc
+    // ANSES: se aplica el mínimo del mes solo con 30 días trabajados,
+    // igual criterio que la validación (códigos 18 y 75).
+    const dias = parseInt(fv(a,'dias_traba')) || 30;
+    let aportejubi = isDoc
       ? r2(remuimpo * 0.18)
       : Math.min(r2(remuimpo * TOPES.PCT_APORTE_TRAB), ANSES_APORTE_MAX);
-    const aportepatr = r2(remuimpo * pctContribDe(fv(a,'actividad')));
+    if(dias === 30 && !isDoc) aportejubi = Math.min(Math.max(aportejubi, ANSES_APORTE_MIN), ANSES_APORTE_MAX);
+    let aportepatr = r2(remuimpo * pctContribDe(fv(a,'actividad')));
+    if(dias === 30) aportepatr = Math.max(aportepatr, ANSES_CONTRIB_MIN);
+    // Si el usuario los editó a mano en el panel, su valor manda.
+    if(fv(a,'_jubiManual') === 'T') aportejubi = fn(a,'aportejubi');
+    if(fv(a,'_patrManual') === 'T') aportepatr = fn(a,'aportepatr');
     const esOSEP   = codobra === '009960';
     const esOSPLAD = codobra === '001102';
     let pctAporte = 0.045, pctContrib = 0.09;
@@ -1516,8 +1524,8 @@ function _doRecalcular(){
     const appatros = minContrib > 0 ? Math.max(r2(baseOS*pctContrib),minContrib) : r2(baseOS*pctContrib);
     let trasp_osep=0;
     if(esOSEP) trasp_osep = Math.max(r2(remuimpoos*0.005), OSEP_TRASP_MIN);
-    const aporte_caj = adCaja==='T'?r2(baseOS*CAJA_APORTE_PCT):0;
-    const contrib_ca = adCaja==='T'?r2(baseOS*CAJA_CONTRIB_PCT):0;
+    const aporte_caj = adCaja==='T'?Math.max(r2(baseOS*CAJA_APORTE_PCT),CAJA_APORTE_MIN):0;
+    const contrib_ca = adCaja==='T'?Math.max(r2(baseOS*CAJA_CONTRIB_PCT),CAJA_APORTE_MIN):0;
     const deuda_caja = tieneDeud==='T'?r2(baseOS*CAJA_DEUDA_PCT):fn(a,'deuda_caja');
     Object.assign(a,{
       remuimpo:String(remuimpo),remutotal:String(remutotal),remuimpoos:String(remuimpoos),
@@ -1761,7 +1769,8 @@ function recalcSS(){
 }
 
 function htmlSS(a){
-  ssManual={jubi:false,patr:false}; // al abrir el agente se muestra el calculado
+  // Si el usuario editó estos importes a mano, se muestran los suyos; si no, el calculado.
+  ssManual={jubi:fv(a,'_jubiManual')==='T',patr:fv(a,'_patrManual')==='T'};
   const isDoc=fv(a,'act_doc')==='01';
   const remusueldo=fn(a,'remusueldo'),remusac=fn(a,'remusac'),hsextras=fn(a,'hsextras');
   const sacnr=parseFloat(fv(a,'_sacnr'))||0; // SAC NR — campo visual interno
@@ -1771,11 +1780,13 @@ function htmlSS(a){
   const cnrPuro=r2(conceptonoBruto-sacnr);  // CNR puro (sin SAC NR)
   const remuimpo=r2(remusueldo+remusac+hsextras);
   const remutotal=r2(remuimpo+conceptonoBruto+premios+vacaciones+canasta);
-  const aportejubi=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
+  const aportejubiCalc=isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*0.11),ANSES_APORTE_MAX);
+  const aportejubi=ssManual.jubi?fn(a,'aportejubi'):aportejubiCalc;
   const insal=esInsalubreAct(fv(a,'actividad'));
   const contribBasica=r2(remuimpo*PCT_CONTRIB_PATRONAL);
   const contribInsal=insal?r2(remuimpo*PCT_INSALUBRE):0;
-  const aportepatr=r2(contribBasica+contribInsal);const adCaja=fv(a,'ad_caja_co');const tieneDeud=fv(a,'tiene_deud');
+  const aportepatr=ssManual.patr?fn(a,'aportepatr'):r2(contribBasica+contribInsal);
+  const adCaja=fv(a,'ad_caja_co');const tieneDeud=fv(a,'tiene_deud');
   const aporte_caj=adCaja==='T'?r2(remutotal*CAJA_APORTE_PCT):0;
   const contrib_ca=adCaja==='T'?r2(remutotal*CAJA_CONTRIB_PCT):0;const deudaCalc=tieneDeud==='T'?r2(remutotal*CAJA_DEUDA_PCT):0;
   const oninput='oninput="recalcSS()"';const onchange='onchange="recalcSS()"';
@@ -2051,6 +2062,7 @@ function guardarAgente(){
       remuimpo:String(remuimpo),remutotal:String(remutotal),
       remuimpoos:String(remuimpoos),remuimpoto:String(remuimpo),
       aportejubi:String(aportejubi),aportepatr:String(aportepatr),
+      _jubiManual:ssManual.jubi?'T':'F', _patrManual:ssManual.patr?'T':'F', // internos, no van al CSV
       ad_caja_co:adCaja,aporte_caj:String(aporte_caj),contrib_ca:String(contrib_ca),
       tiene_deud:tieneDeud,deuda_caja:gv('s-deuda_caja'),
       d_svco:gv('s-d_svco'),d_ss:gv('s-d_ss'),d_svca:gv('s-d_svca'),d_sc:gv('s-d_sc'),
