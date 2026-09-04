@@ -1700,6 +1700,26 @@ function htmlLaborales(a){
   </div>`;
 }
 
+// ── Aporte jubilatorio y contribución patronal: automáticos pero editables ──
+// Mientras ssManual.X sea false, recalcSS() reescribe el campo al tocar las
+// remuneraciones. Si el usuario escribe encima, se congela hasta que pulse ↺.
+let ssManual={jubi:false,patr:false};
+function marcarSSManual(campo){
+  ssManual[campo]=true;
+  const b=document.getElementById(campo==='jubi'?'badge-jubi':'badge-patr');
+  if(b){b.textContent='manual';b.style.background='#C2410C';b.style.color='#fff';}
+  const r=document.getElementById(campo==='jubi'?'reset-jubi':'reset-patr');
+  if(r) r.style.display='inline';
+}
+function resetSSManual(campo){
+  ssManual[campo]=false;
+  const b=document.getElementById(campo==='jubi'?'badge-jubi':'badge-patr');
+  if(b){b.textContent='auto';b.style.background='';b.style.color='';}
+  const r=document.getElementById(campo==='jubi'?'reset-jubi':'reset-patr');
+  if(r) r.style.display='none';
+  recalcSS();
+}
+
 function recalcSS(){
   const gn=id=>{const el=document.getElementById(id);return el?parseFloat(el.value)||0:0;};
   const gv=id=>{const el=document.getElementById(id);return el?el.value:'';};
@@ -1720,20 +1740,28 @@ function recalcSS(){
   const contrib_ca=adCaja==='T'?r2(baseOS*CAJA_CONTRIB_PCT):0;
   const deudaCalc=tieneDeud==='T'?r2(baseOS*CAJA_DEUDA_PCT):0;
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=fmt(v);};
-  set('calc-remuimpo',remuimpo);set('calc-remutotal',remutotal);set('calc-aportejubi',aportejubi);
-  set('calc-aportepatr',aportepatr);set('calc-contrib-basica',contribBasica);set('calc-contrib-insal',contribInsal);
+  const setInp=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  set('calc-remuimpo',remuimpo);set('calc-remutotal',remutotal);
+  if(!ssManual.jubi) setInp('s-aportejubi',aportejubi);
+  if(!ssManual.patr) setInp('s-aportepatr',aportepatr);
+  set('calc-contrib-basica',contribBasica);set('calc-contrib-insal',contribInsal);
   set('calc-aporte_caj',aporte_caj);set('calc-contrib_ca',contrib_ca);set('calc-deuda',deudaCalc);
-  const lbl=document.getElementById('calc-jub-lbl');if(lbl)lbl.textContent=`Aporte Jubilación (${isDoc?'18%':'11%'})`;
+  // Las etiquetas contienen el badge auto/manual y el link ↺ — se reconstruyen enteras
+  const sufijo=c=>` <span class="calc-badge" id="badge-${c}"${ssManual[c]?' style="background:#C2410C;color:#fff"':''}>${ssManual[c]?'manual':'auto'}</span>`
+    +`<a href="javascript:void(0)" id="reset-${c}" onclick="resetSSManual('${c}')" style="${ssManual[c]?'':'display:none;'}font-size:10px;margin-left:4px">↺ recalcular</a>`;
+  const lbl=document.getElementById('calc-jub-lbl');
+  if(lbl)lbl.innerHTML=`Aporte Jubilación (${isDoc?'18%':'11%'})`+sufijo('jubi');
   // Insalubridad: mostrar u ocultar el desglose según la actividad elegida
   const bloqueIns=document.getElementById('bloque-insal');
   if(bloqueIns) bloqueIns.style.display=insal?'grid':'none';
   const lblPatr=document.getElementById('calc-patr-lbl');
   if(lblPatr) lblPatr.innerHTML='Contribución Patr. '+(insal
     ?'<span class="calc-badge" style="background:#B91C1C;color:#fff">insalubre 12.753%</span>'
-    :'(10.753%)');
+    :'(10.753%)')+sufijo('patr');
 }
 
 function htmlSS(a){
+  ssManual={jubi:false,patr:false}; // al abrir el agente se muestra el calculado
   const isDoc=fv(a,'act_doc')==='01';
   const remusueldo=fn(a,'remusueldo'),remusac=fn(a,'remusac'),hsextras=fn(a,'hsextras');
   const sacnr=parseFloat(fv(a,'_sacnr'))||0; // SAC NR — campo visual interno
@@ -1777,8 +1805,16 @@ function htmlSS(a){
     <div class="g2">
       <div><label>Rem. Imponible</label><div class="ro-val" id="calc-remuimpo">${fmt(remuimpo)}</div></div>
       <div><label>Rem. Total</label><div class="ro-val" id="calc-remutotal">${fmt(remutotal)}</div></div>
-      <div><label id="calc-jub-lbl">Aporte Jubilación (${isDoc?'18%':'11%'})</label><div class="ro-val" id="calc-aportejubi">${fmt(aportejubi)}</div></div>
-      <div><label id="calc-patr-lbl">Contribución Patr. ${insal?'<span class="calc-badge" style="background:#B91C1C;color:#fff">insalubre 12.753%</span>':'(10.753%)'}</label><div class="ro-val" id="calc-aportepatr">${fmt(aportepatr)}</div></div>
+      <div>
+        <label id="calc-jub-lbl">Aporte Jubilación (${isDoc?'18%':'11%'}) <span class="calc-badge" id="badge-jubi">auto</span>
+          <a href="javascript:void(0)" id="reset-jubi" onclick="resetSSManual('jubi')" style="display:none;font-size:10px;margin-left:4px">↺ recalcular</a></label>
+        <input type="number" step="0.01" id="s-aportejubi" value="${aportejubi}" oninput="marcarSSManual('jubi')" style="width:100%">
+      </div>
+      <div>
+        <label id="calc-patr-lbl">Contribución Patr. ${insal?'<span class="calc-badge" style="background:#B91C1C;color:#fff">insalubre 12.753%</span>':'(10.753%)'} <span class="calc-badge" id="badge-patr">auto</span>
+          <a href="javascript:void(0)" id="reset-patr" onclick="resetSSManual('patr')" style="display:none;font-size:10px;margin-left:4px">↺ recalcular</a></label>
+        <input type="number" step="0.01" id="s-aportepatr" value="${aportepatr}" oninput="marcarSSManual('patr')" style="width:100%">
+      </div>
       ${isDoc?dpCampo('s-ap_dcto788','Aporte Dcto. 788',fv(a,'ap_dcto788'),'number'):''}
       ${isDoc?dpCampo('s-aporte_dif','Aporte Diferencial Doc.',fv(a,'aporte_dif'),'number'):''}
     </div>
@@ -1999,8 +2035,14 @@ function guardarAgente(){
     const baseOS=remuimpoos;
     const aporte_caj=adCaja==='T'?r2(baseOS*CAJA_APORTE_PCT):0;
     const contrib_ca=adCaja==='T'?r2(baseOS*CAJA_CONTRIB_PCT):0;
-    const aportejubi=fn(a,'aportejubi')||0;
-    const aportepatr=fn(a,'aportepatr')||0;
+    // Se toman del panel: vienen calculados sobre la remu imponible salvo que
+    // el usuario los haya editado a mano (badge "manual").
+    const aportejubi=document.getElementById('s-aportejubi')
+      ? r2(gn('s-aportejubi'))
+      : (isDoc?r2(remuimpo*0.18):Math.min(r2(remuimpo*TOPES.PCT_APORTE_TRAB),ANSES_APORTE_MAX));
+    const aportepatr=document.getElementById('s-aportepatr')
+      ? r2(gn('s-aportepatr'))
+      : r2(remuimpo*pctContribDe(a.actividad));
     Object.assign(a,{
       remusueldo:String(remusueldo),remusac:String(remusac),hsextras:String(hsextras),
       premios:String(premios),vacaciones:String(vacaciones),canasta_fl:String(canasta),
